@@ -1,0 +1,9 @@
+{
+  "mounts": [
+    "/Users/pavel/obsidian-notes"
+  ],
+  "envFile": null,
+  "flags": null,
+  "dangerousSkipPermissions": true,
+  "image": null
+}
