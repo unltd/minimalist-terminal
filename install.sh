@@ -60,27 +60,25 @@ if [ -d "$(pwd)/node_modules/@lydell/node-pty" ]; then
   ln -sfn "$(pwd)/node_modules/@lydell/node-pty" "$PTY_DIR/node-pty"
 fi
 
-# Check / install the native binary for Obsidian's platform
-if [ -d "$(pwd)/node_modules/@lydell/${PTY_PKG##*/}" ]; then
-  PTY_BIN=$(find "$(pwd)/node_modules/@lydell/${PTY_PKG##*/}" -name '*.node' -type f 2>/dev/null | head -1)
-  if [ -n "$PTY_BIN" ]; then
-    echo "==> node-pty native binary: OK (${PTY_BIN})"
-  fi
+# Check / install the native binary for the current platform
+PTY_PKG_DIR="$(pwd)/node_modules/@lydell/${PTY_PKG##*/}"
+if [ -d "$PTY_PKG_DIR" ] && [ -n "$(find "$PTY_PKG_DIR" -name '*.node' -type f 2>/dev/null | head -1)" ]; then
+  echo "==> node-pty native binary: OK"
 else
   echo ""
-  echo "  ⚠️  Native binary NOT FOUND for ${OBSIDIAN_PLATFORM}-${OBSIDIAN_ARCH}"
-  echo "  The terminal will show an error until this is installed."
-  echo ""
-  if [ "${OBSIDIAN_PLATFORM}" != "$(uname -s | tr '[:upper:]' '[:lower:]')" ]; then
-    echo "  You are building in a container (platform=$(uname -s)/$(uname -m))"
-    echo "  but Obsidian runs on ${OBSIDIAN_PLATFORM}/${OBSIDIAN_ARCH}."
-    echo "  Run this command on your REAL machine (macOS):"
+  echo "  ==> Installing node-pty native binary: ${PTY_PKG}..."
+
+  if npm install "${PTY_PKG}" 2>&1; then
+    echo "  ==> Installed OK."
   else
-    echo "  Run:"
+    echo ""
+    echo "  ⚠️  Failed to install ${PTY_PKG}"
+    echo "  This is normal if you're in a Docker container."
+    echo "  Run install.sh on your REAL machine (macOS) instead:"
+    echo ""
+    echo "    cd $(pwd) && ./install.sh"
+    echo ""
   fi
-  echo ""
-  echo "    cd $(pwd) && npm install ${PTY_PKG}"
-  echo ""
 fi
 
 # Symlink all @lydell packages (JS wrapper + native binary if present)
