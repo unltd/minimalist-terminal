@@ -67,8 +67,9 @@ export class TerminalView extends ItemView {
     this.pty = new PtyBridge(
       {
         onData: (data: string) => this.term!.write(data),
-        onExit: (code: number) => {
-          this.term!.write(`\r\n[exit ${code}]\r\n`);
+        onExit: () => {
+          // Shell exited — close the terminal pane
+          this.app.workspace.detachLeavesOfType(VIEW_TYPE_TERMINAL);
         },
       },
       this.term.cols,
@@ -121,7 +122,6 @@ export class TerminalView extends ItemView {
 
     if (rect.width > 0 && rect.height > 0) {
       this.fitAddon.fit();
-      this.term.writeln(`[fit: ${this.term.cols}x${this.term.rows}]`);
       if (this.pty) {
         this.pty.resize(this.term.cols, this.term.rows);
       }
