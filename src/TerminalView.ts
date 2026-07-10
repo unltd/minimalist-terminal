@@ -4,7 +4,6 @@ import { FitAddon } from "@xterm/addon-fit";
 import { PtyBridge } from "./PtyBridge";
 
 export const VIEW_TYPE_TERMINAL = "obsidian-terminal-view";
-const VERSION = "0.1.5";
 
 export class TerminalView extends ItemView {
   private term: Terminal | null = null;
@@ -35,10 +34,6 @@ export class TerminalView extends ItemView {
     contentEl.empty();
     contentEl.classList.add("terminal-view-content");
 
-    // Debug badge — rendered in DOM, always visible
-    const badge = contentEl.createDiv("terminal-debug");
-    badge.setText(`v${VERSION} | waiting for fit...`);
-
     this.container = contentEl.createDiv("terminal-container");
 
     this.term = new Terminal({
@@ -63,9 +58,6 @@ export class TerminalView extends ItemView {
 
     // Mount xterm
     this.term.open(this.container);
-
-    // Test that xterm renders text
-    this.term.writeln("Terminal v" + VERSION);
 
     // Fit after layout
     this.scheduleFit(0);
@@ -126,12 +118,6 @@ export class TerminalView extends ItemView {
   private scheduleFit(attempt: number): void {
     if (!this.container || !this.fitAddon || !this.term) return;
     const rect = this.container.getBoundingClientRect();
-
-    // Update debug badge
-    const badge = this.contentEl.querySelector(".terminal-debug");
-    if (badge) {
-      badge.textContent = `v${VERSION} | rect=${Math.round(rect.width)}x${Math.round(rect.height)} | cols=${this.term.cols}x${this.term.rows} | attempt=${attempt}`;
-    }
 
     if (rect.width > 0 && rect.height > 0) {
       this.fitAddon.fit();
