@@ -1,0 +1,26 @@
+{
+  "name": "obsidian-terminal",
+  "version": "0.1.0",
+  "description": "Embedded terminal for Obsidian — like IntelliJ IDEA's terminal",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
+  },
+  "keywords": ["obsidian", "plugin", "terminal", "xterm"],
+  "author": "Pavel",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20",
+    "builtin-modules": "^4",
+    "esbuild": "^0.24",
+    "obsidian": "^1.7",
+    "typescript": "^5.5"
+  },
+  "dependencies": {
+    "@lydell/node-pty": "^1.1",
+    "@xterm/addon-fit": "^0.10",
+    "@xterm/addon-webgl": "^0.18",
+    "@xterm/xterm": "^5.5"
+  }
+}
