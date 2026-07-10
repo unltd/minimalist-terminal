@@ -1,3 +1,6 @@
+import * as path from "path";
+import * as fs from "fs";
+
 /** Thin wrapper over node-pty. Spawns a shell, pipes data in/out. */
 export class PtyBridge {
   private pty: unknown = null;
@@ -10,17 +13,20 @@ export class PtyBridge {
     cols: number,
     rows: number,
   ) {
-    // Lazy require — node-pty is a native module, may not be available
-    // if the platform binary is missing or ABI-mismatched.
     let spawn: Function;
+
     try {
-      const ptyModule = require("@lydell/node-pty");
+      // Electron renderer resolves modules from inside Obsidian.app,
+      // not from our plugin directory. We must use an absolute path.
+      const ptyPath = PtyBridge.findNodePty();
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const ptyModule = require(ptyPath);
       spawn = ptyModule.spawn;
     } catch (e) {
       this.callbacks.onData(
         `\r\n\x1b[31m[Terminal unavailable]\x1b[0m\r\n` +
-          `Could not load node-pty native module.\r\n` +
-          `Run: npm install @lydell/node-pty-darwin-arm64\r\n` +
+          `node-pty not found.\r\n` +
+          `Install: npm install @lydell/node-pty-darwin-arm64\r\n` +
           `Error: ${(e as Error).message}\r\n\r\n`,
       );
       this.callbacks.onExit(-1);
@@ -63,6 +69,28 @@ export class PtyBridge {
       );
       this.callbacks.onExit(-1);
     }
+  }
+
+  /** Find node-pty by scanning known locations. */
+  private static findNodePty(): string {
+    const candidates = [
+      // Project root (same path inside container and on host)
+      "/Users/pavel/IdeaProjects/obsidian-terminal/node_modules/@lydell/node-pty",
+      // Vault plugin dir
+      "/Users/pavel/obsidian-notes/.obsidian/plugins/obsidian-terminal/node_modules/@lydell/node-pty",
+      // Relative to cwd
+      path.join(process.cwd(), "node_modules/@lydell/node-pty"),
+    ];
+
+    for (const p of candidates) {
+      const indexPath = path.join(p, "index.js");
+      if (fs.existsSync(indexPath)) {
+        return p;
+      }
+    }
+
+    // Not found — let require throw with a useful error
+    return "@lydell/node-pty";
   }
 
   write(data: string): void {

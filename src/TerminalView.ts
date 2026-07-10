@@ -1,14 +1,14 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
-import { WebglAddon } from "@xterm/addon-webgl";
 import { PtyBridge } from "./PtyBridge";
 
 export const VIEW_TYPE_TERMINAL = "obsidian-terminal-view";
+const VERSION = "0.1.4";
 
 export class TerminalView extends ItemView {
-  private term: Terminal;
-  private fitAddon: FitAddon;
+  private term: Terminal | null = null;
+  private fitAddon: FitAddon | null = null;
   private pty: PtyBridge | null = null;
   private container: HTMLElement | null = null;
   private resizeObserver: ResizeObserver | null = null;
@@ -32,71 +32,64 @@ export class TerminalView extends ItemView {
   async onOpen(): Promise<void> {
     const { contentEl } = this;
 
-    // Reset content styles — absolute fill within the view
-    contentEl.style.cssText = "position: relative; width: 100%; height: 100%; overflow: hidden;";
     contentEl.empty();
+    contentEl.classList.add("terminal-view-content");
 
-    // Container fills contentEl absolutely
+    // Debug badge — rendered in DOM, always visible
+    const badge = contentEl.createDiv("terminal-debug");
+    badge.setText(`v${VERSION} | waiting for fit...`);
+
     this.container = contentEl.createDiv("terminal-container");
-    this.container.style.cssText =
-      "position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden;";
 
-    // Terminal emulator
     this.term = new Terminal({
       cursorBlink: true,
       cursorStyle: "bar",
       fontSize: 13,
       fontFamily: 'Menlo, Monaco, "Courier New", monospace',
       theme: {
-        background: getComputedStyle(document.body)
-          .getPropertyValue("--background-primary")
-          .trim() || "#1e1e1e",
-        foreground: getComputedStyle(document.body)
-          .getPropertyValue("--text-normal")
-          .trim() || "#d4d4d4",
+        background: "#1e1e1e",
+        foreground: "#d4d4d4",
         cursor: "#d4d4d4",
         selectionBackground: "#264f78",
       },
+      // Start with explicit rows so xterm has size before first fit
+      rows: 24,
+      cols: 80,
       allowProposedApi: true,
     });
 
-    // Addons
     this.fitAddon = new FitAddon();
     this.term.loadAddon(this.fitAddon);
 
-    try {
-      this.term.loadAddon(new WebglAddon());
-    } catch {
-      // Fallback to canvas renderer if WebGL unavailable
-    }
-
-    // Mount
+    // Mount xterm
     this.term.open(this.container);
 
-    // Fit after layout settles, with retries
-    this.fitTerminal();
+    // Test that xterm renders text
+    this.term.writeln("Terminal v" + VERSION);
 
-    // Spawn PTY after first fit
+    // Fit after layout
+    this.scheduleFit(0);
+
+    // Spawn PTY
     this.pty = new PtyBridge(
       {
-        onData: (data: string) => this.term.write(data),
+        onData: (data: string) => this.term!.write(data),
         onExit: (code: number) => {
-          this.term.write(`\r\n[Process exited with code ${code}]\r\n`);
+          this.term!.write(`\r\n[exit ${code}]\r\n`);
         },
       },
       this.term.cols,
       this.term.rows,
     );
 
-    // User input → PTY
     this.term.onData((data: string) => {
       this.pty?.write(data);
     });
 
-    // Clipboard handling: Ctrl+Shift+C copy, Ctrl+Shift+V paste
+    // Clipboard
     this.term.attachCustomKeyEventHandler((e: KeyboardEvent): boolean => {
       if (e.ctrlKey && e.shiftKey && e.key === "C") {
-        const selection = this.term.getSelection();
+        const selection = this.term!.getSelection();
         if (selection) {
           navigator.clipboard.writeText(selection);
         }
@@ -108,10 +101,9 @@ export class TerminalView extends ItemView {
         });
         return false;
       }
-      return true; // Ctrl+C, Ctrl+V etc → PTY
+      return true;
     });
 
-    // Right-click paste
     this.term.element?.addEventListener("contextmenu", (e: MouseEvent) => {
       e.preventDefault();
       navigator.clipboard.readText().then((text: string) => {
@@ -119,35 +111,34 @@ export class TerminalView extends ItemView {
       });
     });
 
-    // Resize: container size changes → fit xterm → resize PTY
-    this.resizeObserver = new ResizeObserver((entries) => {
-      // Small delay — let DOM settle after pane resize
-      requestAnimationFrame(() => {
-        this.fitAddon.fit();
-        if (this.pty) {
-          this.pty.resize(this.term.cols, this.term.rows);
-        }
-      });
+    this.resizeObserver = new ResizeObserver(() => {
+      if (!this.fitAddon || !this.pty) return;
+      this.fitAddon.fit();
+      this.pty.resize(this.term!.cols, this.term!.rows);
     });
     this.resizeObserver.observe(this.container);
 
-    // Focus terminal
     this.term.focus();
   }
 
-  /** Fit the terminal with retries — Obsidian may not have laid out the pane yet. */
-  private fitTerminal(attempt = 0): void {
-    if (!this.container) return;
-
+  private scheduleFit(attempt: number): void {
+    if (!this.container || !this.fitAddon || !this.term) return;
     const rect = this.container.getBoundingClientRect();
+
+    // Update debug badge
+    const badge = this.contentEl.querySelector(".terminal-debug");
+    if (badge) {
+      badge.textContent = `v${VERSION} | rect=${Math.round(rect.width)}x${Math.round(rect.height)} | cols=${this.term.cols}x${this.term.rows} | attempt=${attempt}`;
+    }
+
     if (rect.width > 0 && rect.height > 0) {
       this.fitAddon.fit();
+      this.term.writeln(`[fit: ${this.term.cols}x${this.term.rows}]`);
       if (this.pty) {
         this.pty.resize(this.term.cols, this.term.rows);
       }
-    } else if (attempt < 10) {
-      // Container has no dimensions yet — retry
-      setTimeout(() => this.fitTerminal(attempt + 1), 50);
+    } else if (attempt < 20) {
+      setTimeout(() => this.scheduleFit(attempt + 1), 100);
     }
   }
 
@@ -156,7 +147,9 @@ export class TerminalView extends ItemView {
     this.resizeObserver = null;
     this.pty?.kill();
     this.pty = null;
-    this.term.dispose();
+    this.term?.dispose();
+    this.term = null;
+    this.fitAddon = null;
     this.container = null;
   }
 }
