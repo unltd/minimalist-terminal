@@ -32,8 +32,14 @@ export class TerminalView extends ItemView {
   async onOpen(): Promise<void> {
     const { contentEl } = this;
 
-    // Container div
+    // Force content area to fill available height
+    contentEl.style.display = "flex";
+    contentEl.style.flexDirection = "column";
+    contentEl.style.overflow = "hidden";
+
+    // Container div — flex-grow to fill remaining space
     this.container = contentEl.createDiv("terminal-container");
+    this.container.style.flexGrow = "1";
 
     // Terminal emulator
     this.term = new Terminal({
@@ -67,8 +73,15 @@ export class TerminalView extends ItemView {
     // Mount
     this.term.open(this.container);
 
-    // Fit after a tick so xterm has dimensions
-    setTimeout(() => this.fitAddon.fit(), 10);
+    // Fit after layout settles — two animation frames to ensure paint
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        this.fitAddon.fit();
+        if (this.pty) {
+          this.pty.resize(this.term.cols, this.term.rows);
+        }
+      });
+    });
 
     // Spawn PTY — dimensions are 0 until fit, so use defaults
     this.pty = new PtyBridge(
