@@ -41,8 +41,8 @@ export class PtyBridge {
     }
 
     try {
-      // -l: login shell — sources .zshrc/.bash_profile so PATH is set correctly
-      const pty = spawn(shell, ["-l"], {
+      // -l (login) + -i (interactive): sources .zprofile AND .zshrc so PATH is complete
+      const pty = spawn(shell, ["-l", "-i"], {
         name: "xterm-256color",
         cols,
         rows,
