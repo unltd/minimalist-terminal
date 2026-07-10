@@ -32,14 +32,14 @@ export class TerminalView extends ItemView {
   async onOpen(): Promise<void> {
     const { contentEl } = this;
 
-    // Force content area to fill available height
-    contentEl.style.display = "flex";
-    contentEl.style.flexDirection = "column";
-    contentEl.style.overflow = "hidden";
+    // Reset content styles — absolute fill within the view
+    contentEl.style.cssText = "position: relative; width: 100%; height: 100%; overflow: hidden;";
+    contentEl.empty();
 
-    // Container div — flex-grow to fill remaining space
+    // Container fills contentEl absolutely
     this.container = contentEl.createDiv("terminal-container");
-    this.container.style.flexGrow = "1";
+    this.container.style.cssText =
+      "position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden;";
 
     // Terminal emulator
     this.term = new Terminal({
@@ -73,17 +73,10 @@ export class TerminalView extends ItemView {
     // Mount
     this.term.open(this.container);
 
-    // Fit after layout settles — two animation frames to ensure paint
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        this.fitAddon.fit();
-        if (this.pty) {
-          this.pty.resize(this.term.cols, this.term.rows);
-        }
-      });
-    });
+    // Fit after layout settles, with retries
+    this.fitTerminal();
 
-    // Spawn PTY — dimensions are 0 until fit, so use defaults
+    // Spawn PTY after first fit
     this.pty = new PtyBridge(
       {
         onData: (data: string) => this.term.write(data),
@@ -95,7 +88,7 @@ export class TerminalView extends ItemView {
       this.term.rows,
     );
 
-    // User input → PTY (with keyboard filtering applied at xterm level)
+    // User input → PTY
     this.term.onData((data: string) => {
       this.pty?.write(data);
     });
@@ -107,7 +100,7 @@ export class TerminalView extends ItemView {
         if (selection) {
           navigator.clipboard.writeText(selection);
         }
-        return false; // don't pass to PTY
+        return false;
       }
       if (e.ctrlKey && e.shiftKey && e.key === "V") {
         navigator.clipboard.readText().then((text: string) => {
@@ -115,7 +108,7 @@ export class TerminalView extends ItemView {
         });
         return false;
       }
-      return true; // everything else (Ctrl+C, Ctrl+V, etc.) → PTY
+      return true; // Ctrl+C, Ctrl+V etc → PTY
     });
 
     // Right-click paste
@@ -127,16 +120,35 @@ export class TerminalView extends ItemView {
     });
 
     // Resize: container size changes → fit xterm → resize PTY
-    this.resizeObserver = new ResizeObserver(() => {
+    this.resizeObserver = new ResizeObserver((entries) => {
+      // Small delay — let DOM settle after pane resize
+      requestAnimationFrame(() => {
+        this.fitAddon.fit();
+        if (this.pty) {
+          this.pty.resize(this.term.cols, this.term.rows);
+        }
+      });
+    });
+    this.resizeObserver.observe(this.container);
+
+    // Focus terminal
+    this.term.focus();
+  }
+
+  /** Fit the terminal with retries — Obsidian may not have laid out the pane yet. */
+  private fitTerminal(attempt = 0): void {
+    if (!this.container) return;
+
+    const rect = this.container.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
       this.fitAddon.fit();
       if (this.pty) {
         this.pty.resize(this.term.cols, this.term.rows);
       }
-    });
-    this.resizeObserver.observe(this.container);
-
-    // Focus terminal on open
-    this.term.focus();
+    } else if (attempt < 10) {
+      // Container has no dimensions yet — retry
+      setTimeout(() => this.fitTerminal(attempt + 1), 50);
+    }
   }
 
   async onClose(): Promise<void> {
