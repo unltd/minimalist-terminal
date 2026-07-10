@@ -12,6 +12,7 @@ export class PtyBridge {
     private callbacks: PtyBridgeCallbacks,
     cols: number,
     rows: number,
+    cwd: string,
   ) {
     let spawn: Function;
 
@@ -34,7 +35,6 @@ export class PtyBridge {
     }
 
     const shell = process.env.SHELL || "bash";
-    const cwd = process.env.HOME || process.env.USERPROFILE || "/";
 
     try {
       const pty = spawn(shell, [], {

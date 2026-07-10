@@ -4,7 +4,7 @@ import { FitAddon } from "@xterm/addon-fit";
 import { PtyBridge } from "./PtyBridge";
 
 export const VIEW_TYPE_TERMINAL = "obsidian-terminal-view";
-const VERSION = "0.1.4";
+const VERSION = "0.1.5";
 
 export class TerminalView extends ItemView {
   private term: Terminal | null = null;
@@ -70,7 +70,8 @@ export class TerminalView extends ItemView {
     // Fit after layout
     this.scheduleFit(0);
 
-    // Spawn PTY
+    // Spawn PTY — cwd is the vault root
+    const vaultPath = (this.app.vault.adapter as any).basePath || process.env.HOME || "/";
     this.pty = new PtyBridge(
       {
         onData: (data: string) => this.term!.write(data),
@@ -80,6 +81,7 @@ export class TerminalView extends ItemView {
       },
       this.term.cols,
       this.term.rows,
+      vaultPath,
     );
 
     this.term.onData((data: string) => {
