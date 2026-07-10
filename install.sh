@@ -37,6 +37,15 @@ for f in main.js main.js.map styles.css manifest.json; do
   ln -sfn "$(pwd)/$f" "$PLUGIN_DIR/$f"
 done
 
+# Symlink node-pty native module (must be external — can't bundle .node files)
+mkdir -p "$PLUGIN_DIR/node_modules/@lydell"
+if [ -d "$(pwd)/node_modules/@lydell" ]; then
+  for pkg in $(pwd)/node_modules/@lydell/*; do
+    [ -d "$pkg" ] || continue
+    ln -sfn "$pkg" "$PLUGIN_DIR/node_modules/@lydell/$(basename "$pkg")"
+  done
+fi
+
 # Hot reload marker (optional: install the Hot Reload plugin to use this)
 touch "$PLUGIN_DIR/.hotreload" 2>/dev/null || true
 

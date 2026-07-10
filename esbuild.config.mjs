@@ -27,6 +27,7 @@ const context = await esbuild.context({
     "@lezer/common",
     "@lezer/highlight",
     "@lezer/lr",
+    "@lydell/node-pty",
     ...builtins,
   ],
   format: "cjs",
