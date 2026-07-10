@@ -34,10 +34,15 @@ export class PtyBridge {
       return;
     }
 
-    const shell = process.env.SHELL || "bash";
+    // Prefer zsh on macOS if SHELL is the ancient /bin/bash
+    let shell = process.env.SHELL || "bash";
+    if (shell === "/bin/bash" && fs.existsSync("/bin/zsh")) {
+      shell = "/bin/zsh";
+    }
 
     try {
-      const pty = spawn(shell, [], {
+      // -l: login shell — sources .zshrc/.bash_profile so PATH is set correctly
+      const pty = spawn(shell, ["-l"], {
         name: "xterm-256color",
         cols,
         rows,
