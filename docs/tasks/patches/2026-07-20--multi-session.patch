@@ -1,0 +1,96 @@
+From a411b3374061378c968d3f98c9568166a0fc847b Mon Sep 17 00:00:00 2001
+From: Pavel <pavel@obsidian-terminal.dev>
+Date: Mon, 20 Jul 2026 13:15:30 +0000
+Subject: [PATCH] =?UTF-8?q?feat:=20multi-session=20support=20=E2=80=94=20e?=
+ =?UTF-8?q?ach=20terminal=20opens=20in=20a=20new=20tab?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Every click on ribbon icon or command palette creates a new
+terminal leaf instead of reusing the existing one. Terminals
+are named Terminal 1, Terminal 2, etc. via a module-level counter.
+
+Each terminal has its own PtyBridge and shell process — closing
+a leaf kills its PTY independently.
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+---
+ src/TerminalView.ts |  6 +++++-
+ src/main.ts         | 15 ++++++++-------
+ 2 files changed, 13 insertions(+), 8 deletions(-)
+
+diff --git a/src/TerminalView.ts b/src/TerminalView.ts
+index 28a6579..64d8536 100644
+--- a/src/TerminalView.ts
++++ b/src/TerminalView.ts
+@@ -5,15 +5,19 @@ import { PtyBridge } from "./PtyBridge";
+ 
+ export const VIEW_TYPE_TERMINAL = "obsidian-terminal-view";
+ 
++let nextTerminal = 1;
++
+ export class TerminalView extends ItemView {
+   private term: Terminal | null = null;
+   private fitAddon: FitAddon | null = null;
+   private pty: PtyBridge | null = null;
+   private container: HTMLElement | null = null;
+   private resizeObserver: ResizeObserver | null = null;
++  private readonly terminalNumber: number;
+ 
+   constructor(leaf: WorkspaceLeaf) {
+     super(leaf);
++    this.terminalNumber = nextTerminal++;
+   }
+ 
+   getViewType(): string {
+@@ -21,7 +25,7 @@ export class TerminalView extends ItemView {
+   }
+ 
+   getDisplayText(): string {
+-    return "Terminal";
++    return `Terminal ${this.terminalNumber}`;
+   }
+ 
+   getIcon(): string {
+diff --git a/src/main.ts b/src/main.ts
+index a8e2c46..e5b1f8e 100644
+--- a/src/main.ts
++++ b/src/main.ts
+@@ -2,7 +2,10 @@ import { Plugin } from "obsidian";
+ import { TerminalView, VIEW_TYPE_TERMINAL } from "./TerminalView";
+ 
+ export default class TerminalPlugin extends Plugin {
+-  async onload() {
++  /** Static counter shared with TerminalView for naming */
++  static terminalCounter = 0;
++
++  onload() {
+     this.registerView(VIEW_TYPE_TERMINAL, (leaf) => new TerminalView(leaf));
+ 
+     this.addRibbonIcon("terminal", "Open terminal", () => {
+@@ -18,17 +21,15 @@ export default class TerminalPlugin extends Plugin {
+ 
+   onunload() {
+     this.app.workspace.detachLeavesOfType(VIEW_TYPE_TERMINAL);
++    TerminalPlugin.terminalCounter = 0;
+   }
+ 
+-  /** Open terminal in a bottom pane. If one exists, reveal it instead. */
++  /** Open a new terminal in a bottom pane. Always creates a new leaf. */
+   private async openTerminal(): Promise<void> {
+     const { workspace } = this.app;
+ 
+-    let leaf = workspace.getLeavesOfType(VIEW_TYPE_TERMINAL)[0];
+-    if (!leaf) {
+-      leaf = workspace.getLeaf("split", "horizontal");
+-      await leaf.setViewState({ type: VIEW_TYPE_TERMINAL, active: true });
+-    }
++    const leaf = workspace.getLeaf("split", "horizontal");
++    await leaf.setViewState({ type: VIEW_TYPE_TERMINAL, active: true });
+     workspace.revealLeaf(leaf);
+   }
+ }
+-- 
+2.34.1
+
