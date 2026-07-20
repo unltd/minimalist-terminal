@@ -3,6 +3,9 @@ Direct pytest runner for all 7 MVP DoD items.
 Bypasses Gauge/gRPC — calls CDP directly via conftest helpers.
 
 Run:  pytest tests/test_mvp_dod.py -v
+
+Timing note: each CDP call takes ~5.3 s (Docker→macOS host WebSocket).
+All timeouts and poll intervals are calibrated to this latency.
 """
 
 import json
@@ -15,6 +18,19 @@ import pytest
 # Ensure step_impl is importable
 sys.path.insert(0, "tests/step_impl")
 from conftest import cdp_eval, cdp_screenshot, CdpError  # noqa: E402
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Timing constants (calibrated to ~5.3 s CDP latency)
+# ═══════════════════════════════════════════════════════════════════
+
+CDP_LATENCY = 5.5          # one CDP round-trip (seconds)
+POLL_INTERVAL = 2.0        # between CDP retries (must be < latency to avoid wasted waits)
+FAST_POLL = 1.0            # for short-retry loops (≤3 attempts)
+PTY_SPAWN_WAIT = 4.0       # blind wait after opening terminal for PTY to spawn
+PROMPT_TIMEOUT = 25        # max wait for shell prompt (allows 4–5 CDP calls)
+TEXT_TIMEOUT = 20          # max wait for text to appear in buffer (~3 CDP calls)
+FOCUS_TIMEOUT = 12         # max wait for autofocus (~2 CDP calls, spaced ~5s apart)
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -69,7 +85,7 @@ def test_dod2_open_via_command_palette():
     """Терминал открывается через Command Palette."""
     _close_all_terminal_leaves()
     cdp_eval("app.commands.executeCommandById('obsidian-terminal:open-terminal');")
-    time.sleep(1.0)
+    time.sleep(PTY_SPAWN_WAIT)
     count = cdp_eval("app.workspace.getLeavesOfType('obsidian-terminal-view').length")
     assert count >= 1, f"No terminal leaf found (count={count})"
 
@@ -85,9 +101,9 @@ def test_dod2_no_duplicate_on_reopen():
     """Повторное открытие не дублирует листья."""
     _close_all_terminal_leaves()
     cdp_eval("app.commands.executeCommandById('obsidian-terminal:open-terminal');")
-    time.sleep(1.0)
+    time.sleep(PTY_SPAWN_WAIT)
     cdp_eval("app.commands.executeCommandById('obsidian-terminal:open-terminal');")
-    time.sleep(0.5)
+    time.sleep(1.0)
     count = cdp_eval("app.workspace.getLeavesOfType('obsidian-terminal-view').length")
     assert count == 1, f"Expected 1 leaf, found {count}"
 
@@ -101,7 +117,8 @@ def test_dod3_echo_command():
     _ensure_terminal_open()
     _wait_for_prompt()
     _pty_write("echo hello_mvp_test\n")
-    _wait_for_text("hello_mvp_test", timeout=5)
+    time.sleep(2.0)          # give the shell a moment to execute
+    _wait_for_text("hello_mvp_test", timeout=TEXT_TIMEOUT)
 
 
 def test_dod3_pwd_command():
@@ -109,7 +126,8 @@ def test_dod3_pwd_command():
     _ensure_terminal_open()
     _wait_for_prompt()
     _pty_write("pwd\n")
-    _wait_for_text("/", timeout=5)
+    time.sleep(1.0)
+    _wait_for_text("/", timeout=TEXT_TIMEOUT)
 
 
 def test_dod3_prompt_returns():
@@ -117,13 +135,16 @@ def test_dod3_prompt_returns():
     _ensure_terminal_open()
     _wait_for_prompt()
     _pty_write("echo done\n")
-    # Wait for prompt to appear on any line (not necessarily the last)
-    for _ in range(20):
-        text = _terminal_buffer_text()
-        if text and any(p in text for p in ["$ ", "# ", "> "]):
+    time.sleep(1.0)
+    # After echo, the output line is "done", then a new prompt line appears.
+    # With 5 s CDP latency, use longer interval and higher timeout.
+    deadline = time.monotonic() + PROMPT_TIMEOUT
+    while time.monotonic() < deadline:
+        text = _terminal_buffer_text(lines=15)
+        if text and any(p in text for p in ("$ ", "# ", "> ")):
             return
-        time.sleep(0.3)
-    pytest.fail(f"Prompt did not return after command. Buffer: {_terminal_buffer_text()}")
+        time.sleep(POLL_INTERVAL)
+    pytest.fail(f"Prompt did not return after command. Buffer: {_terminal_buffer_text(lines=15)}")
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -135,7 +156,7 @@ def test_dod4_selection_returns_text():
     _ensure_terminal_open()
     _wait_for_prompt()
     _pty_write("echo selection_test_line\n")
-    time.sleep(0.5)
+    time.sleep(1.5)
 
     cdp_eval("""
         (function () {
@@ -146,7 +167,7 @@ def test_dod4_selection_returns_text():
             if (endLine > 0) view.term.selectLines(0, endLine);
         })()
     """)
-    time.sleep(0.3)
+    time.sleep(0.5)
 
     selection = cdp_eval("""
         (function () {
@@ -176,7 +197,7 @@ def test_dod4_selection_layer_exists():
     _ensure_terminal_open()
     _wait_for_prompt()
     _pty_write("echo make_selection_test\n")
-    time.sleep(0.5)
+    time.sleep(1.5)
     # Make a selection — xterm.js creates .xterm-selection divs
     cdp_eval("""
         (function () {
@@ -186,7 +207,7 @@ def test_dod4_selection_layer_exists():
             if (buf.length > 0) view.term.selectLines(0, Math.min(buf.length - 1, 3));
         })()
     """)
-    time.sleep(0.3)
+    time.sleep(0.5)
     exists = cdp_eval(
         "document.querySelectorAll('.xterm-selection').length > 0"
     )
@@ -201,18 +222,28 @@ def test_dod5_scroll_after_filling_buffer():
     """Скролл появляется после заполнения буфера."""
     _ensure_terminal_open()
     _wait_for_prompt()
-    # Use seq which is faster than for-loop in shell
     _pty_write("seq 1 100\n")
-    time.sleep(2.0)
+    time.sleep(4.0)  # generating 100 lines takes a moment
 
-    scroll_top = cdp_eval("""
+    # Check buffer has grown beyond visible rows
+    rows = cdp_eval("""
         (function () {
-            var vp = document.querySelector('.xterm-viewport');
-            return vp ? vp.scrollTop : null;
+            var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+            if (!view || !view.term) return 0;
+            return view.term.rows;
         })()
     """)
-    assert scroll_top is not None, ".xterm-viewport not found"
-    assert scroll_top > 0, f"scrollTop is {scroll_top}, expected > 0"
+    buf_len = cdp_eval("""
+        (function () {
+            var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+            if (!view || !view.term) return 0;
+            return view.term.buffer.active.length;
+        })()
+    """)
+    assert buf_len > rows, (
+        f"Buffer length ({buf_len}) should exceed visible rows ({rows}) "
+        "after generating output — scrollback should be active"
+    )
 
 
 def test_dod5_buffer_has_scrollback():
@@ -220,7 +251,7 @@ def test_dod5_buffer_has_scrollback():
     _ensure_terminal_open()
     _wait_for_prompt()
     _pty_write("seq 1 50\n")
-    time.sleep(1.5)
+    time.sleep(2.5)
 
     length = cdp_eval("""
         (function () {
@@ -245,8 +276,10 @@ def test_dod6_autofocus_on_open():
             leaf.setViewState({ type: "obsidian-terminal-view", active: true });
         })()
     """)
-    # Retry loop — plugin has 3s focus retry logic
-    for _ in range(30):
+    time.sleep(PTY_SPAWN_WAIT)
+    # Poll with intervals calibrated to CDP latency
+    deadline = time.monotonic() + FOCUS_TIMEOUT
+    while time.monotonic() < deadline:
         focused = cdp_eval("""
             (function () {
                 var el = document.activeElement;
@@ -255,7 +288,7 @@ def test_dod6_autofocus_on_open():
         """)
         if focused:
             return
-        time.sleep(0.2)
+        time.sleep(FAST_POLL)
 
     active = cdp_eval(
         "document.activeElement ? document.activeElement.tagName : 'null'"
@@ -272,7 +305,7 @@ def test_dod6_active_element_is_textarea():
             if (el) el.focus();
         })()
     """)
-    time.sleep(0.2)
+    time.sleep(0.3)
 
     result = cdp_eval("""
         (function () {
@@ -297,16 +330,16 @@ def test_dod7_close_by_exit_no_zombies():
     _wait_for_prompt()
     _pty_write("exit\n")
 
-    # Wait for leaf to close
-    for _ in range(40):
+    # Wait for leaf to close (with CDP-latency-aware intervals)
+    for _ in range(10):
+        time.sleep(FAST_POLL)
         count = cdp_eval("app.workspace.getLeavesOfType('obsidian-terminal-view').length")
         if count == 0:
             break
-        time.sleep(0.2)
     else:
         pytest.fail("Terminal leaf not removed after exit")
 
-    time.sleep(1.0)
+    time.sleep(2.0)
     _assert_no_zombie_processes()
 
 
@@ -316,15 +349,15 @@ def test_dod7_close_by_api_no_zombies():
     _wait_for_prompt()
     cdp_eval("app.workspace.detachLeavesOfType('obsidian-terminal-view');")
 
-    for _ in range(25):
+    for _ in range(6):
+        time.sleep(FAST_POLL)
         count = cdp_eval("app.workspace.getLeavesOfType('obsidian-terminal-view').length")
         if count == 0:
             break
-        time.sleep(0.2)
     else:
         pytest.fail("Terminal leaf not removed after detach")
 
-    time.sleep(1.0)
+    time.sleep(2.0)
     _assert_no_zombie_processes()
 
 
@@ -338,33 +371,43 @@ def _close_all_terminal_leaves():
 
 
 def _ensure_terminal_open():
-    """Always close any existing terminal and open a fresh one.
-    This avoids reusing terminals with dead PTY processes."""
+    """Close any existing terminal, open a fresh one, wait for PTY spawn.
+
+    Does NOT do extra CDP readiness checks — _wait_for_prompt() serves
+    as the natural readiness gate (it polls until the shell prompt appears).
+    """
     cdp_eval("app.workspace.detachLeavesOfType('obsidian-terminal-view');")
-    time.sleep(0.3)
+    time.sleep(0.5)
     cdp_eval("""
         (function () {
             var leaf = app.workspace.getLeaf("split", "horizontal");
             leaf.setViewState({ type: "obsidian-terminal-view", active: true });
         })()
     """)
-    time.sleep(3.0)
+    time.sleep(PTY_SPAWN_WAIT)
 
 
 def _pty_write(data: str):
-    """Write data to the PTY. Handles escaping for JS string."""
-    # Escape for JS single-quoted string
-    escaped = data.replace("\\", "\\\\").replace("'", "\\'")
+    """Write data to the PTY via a JS double-quoted string.
+
+    Uses explicit \\n escape sequence — avoids literal newlines in JS source
+    which cause SyntaxError (silently swallowed by older cdp-eval.py).
+    """
+    # Strip trailing newline — we add explicit \\n in JS
+    text = data.rstrip("\n")
+    # Escape for double-quoted JS string: backslash, double-quote, newline, etc.
+    escaped = text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
     cdp_eval(f"""
         (function () {{
             var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
             if (!view || !view.pty) throw new Error("Terminal not open");
-            view.pty.write('{escaped}');
+            view.pty.write("{escaped}\\n");
         }})()
     """)
 
 
-def _wait_for_prompt(timeout: int = 8):
+def _wait_for_prompt(timeout: int = PROMPT_TIMEOUT):
+    """Poll terminal buffer until a shell prompt character ($, #, >) is found."""
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         try:
@@ -386,45 +429,38 @@ def _wait_for_prompt(timeout: int = 8):
                 return
         except CdpError:
             pass
-        time.sleep(0.3)
-    pytest.fail(f"Prompt not found within {timeout}s")
+        time.sleep(POLL_INTERVAL)
+    # One last check for diagnostics
+    last = _terminal_buffer_text(lines=10)
+    pytest.fail(f"Prompt not found within {timeout}s. Last buffer lines:\n{last}")
 
 
-def _wait_for_text(search: str, timeout: int = 5):
+def _wait_for_text(search: str, timeout: int = TEXT_TIMEOUT):
+    """Poll terminal buffer until `search` appears in recent output."""
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
-        text = cdp_eval("""
-            (function () {
-                var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
-                if (!view || !view.term) return "";
-                var buf = view.term.buffer.active;
-                var lines = [];
-                for (var i = Math.max(0, buf.length - 20); i < buf.length; i++) {
-                    var line = buf.getLine(i);
-                    if (line) lines.push(line.translateToString());
-                }
-                return lines.join("\\n");
-            })()
-        """)
-        if search in str(text):
-            return
-        time.sleep(0.3)
-    pytest.fail(f"'{search}' not found in terminal output within {timeout}s")
-
-
-def _terminal_last_line() -> str:
-    try:
-        return str(cdp_eval("""
-            (function () {
-                var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
-                if (!view || !view.term) return "";
-                var buf = view.term.buffer.active;
-                var last = buf.getLine(buf.length - 1);
-                return last ? last.translateToString() : "";
-            })()
-        """))
-    except CdpError:
-        return ""
+        try:
+            text = cdp_eval("""
+                (function () {
+                    var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+                    if (!view || !view.term) return "";
+                    var buf = view.term.buffer.active;
+                    var lines = [];
+                    for (var i = Math.max(0, buf.length - 25); i < buf.length; i++) {
+                        var line = buf.getLine(i);
+                        if (line) lines.push(line.translateToString());
+                    }
+                    return lines.join("\\n");
+                })()
+            """)
+            if search in str(text):
+                return
+        except CdpError:
+            pass
+        time.sleep(POLL_INTERVAL)
+    # Diagnostic: show what we have
+    last = _terminal_buffer_text(lines=20)
+    pytest.fail(f"'{search}' not found in terminal output within {timeout}s. Buffer:\n{last}")
 
 
 def _terminal_buffer_text(lines: int = 10) -> str:

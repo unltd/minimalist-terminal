@@ -33,11 +33,18 @@ def http_get(path: str) -> dict:
     return json.loads(response.split(b"\r\n\r\n", 1)[1])
 
 
-def ws_eval(expression: str) -> dict:
+def ws_eval(expression: str, vault: str | None = None) -> dict:
     """Connect via WebSocket to Obsidian, evaluate JS, return result."""
     # Get Obsidian page target
     targets = http_get("/json")
     pages = [t for t in targets if t.get("type") == "page" and "obsidian" in t.get("url", "")]
+
+    # Filter by vault name (appears in title like "Terminal - vault-name - Obsidian ...")
+    if vault and len(pages) > 1:
+        matches = [t for t in pages if vault in t.get("title", "")]
+        if matches:
+            pages = matches
+
     if not pages:
         pages = [t for t in targets if t.get("type") == "page"]
     if not pages:
@@ -158,11 +165,21 @@ def _recv_exact(sock, n: int) -> bytes:
 
 if __name__ == "__main__":
     js_code = sys.argv[1] if len(sys.argv) > 1 else "1 + 1"
+    vault = os.environ.get("CDP_VAULT") or None
     try:
-        result = ws_eval(js_code)
+        result = ws_eval(js_code, vault=vault)
         if "result" in result:
             r = result["result"]
-            if r.get("subtype") == "error":
+            # Check for JS exception (thrown errors, syntax errors, etc.)
+            if "exceptionDetails" in r:
+                details = r["exceptionDetails"]
+                text = details.get("text", "unknown error")
+                print(f"JS EXCEPTION: {text}", file=sys.stderr)
+                exc = details.get("exception", {})
+                if exc.get("description"):
+                    print(f"  {exc['description']}", file=sys.stderr)
+                sys.exit(1)
+            elif r.get("subtype") == "error":
                 print("JS ERROR:", r.get("description", "unknown"))
                 sys.exit(1)
             else:

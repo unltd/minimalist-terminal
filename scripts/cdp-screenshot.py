@@ -33,10 +33,17 @@ def http_get(path: str) -> dict:
     return json.loads(body)
 
 
-def ws_connect_and_exec(expression: str) -> dict:
+def ws_connect_and_exec(expression: str, vault: str | None = None) -> dict:
     """Connect via WebSocket to Obsidian page and execute JS."""
     targets = http_get("/json")
     pages = [t for t in targets if t.get("type") == "page" and "obsidian" in t.get("url", "")]
+
+    # Filter by vault name (appears in title like "Terminal - vault-name - Obsidian ...")
+    if vault and len(pages) > 1:
+        matches = [t for t in pages if vault in t.get("title", "")]
+        if matches:
+            pages = matches
+
     if not pages:
         pages = [t for t in targets if t.get("type") == "page"]
     if not pages:
@@ -125,6 +132,8 @@ def ws_recv(sock) -> dict:
 
 def screenshot(filename: str = None):
     """Take a screenshot of the Obsidian page."""
+    vault = os.environ.get("CDP_VAULT") or None
+
     if filename is None:
         # Find next available screenshot number
         os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -140,7 +149,7 @@ def screenshot(filename: str = None):
 
     filepath = os.path.join(OUTPUT_DIR, filename)
 
-    sock = ws_connect_and_exec("1")
+    sock = ws_connect_and_exec("1", vault=vault)
 
     # Send Page.captureScreenshot
     msg = {"id": 1, "method": "Page.captureScreenshot", "params": {"format": "png"}}

@@ -41,6 +41,9 @@ def cdp_eval(expression: str, timeout: int = 30) -> object:
     # Propagate CDP_HOST if set, otherwise script uses its built-in default
     if "CDP_HOST" in os.environ:
         env["CDP_HOST"] = os.environ["CDP_HOST"]
+    # Default vault for testing
+    if "CDP_VAULT" not in env:
+        env["CDP_VAULT"] = "obsidian-test"
 
     proc = subprocess.run(
         [sys.executable, CDP_EVAL, expression],
@@ -87,6 +90,8 @@ def cdp_screenshot(filename: str | None = None) -> str:
     env = os.environ.copy()
     if "CDP_HOST" in os.environ:
         env["CDP_HOST"] = os.environ["CDP_HOST"]
+    if "CDP_VAULT" not in env:
+        env["CDP_VAULT"] = "obsidian-test"
 
     args = [sys.executable, CDP_SCREENSHOT]
     if filename:
