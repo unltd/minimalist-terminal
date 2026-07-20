@@ -1,23 +1,64 @@
-/* View content fills the leaf */
+/* Terminal view: fill the leaf content area */
 .terminal-view-content {
-  position: absolute !important;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  height: 100%;
+  /* Override Obsidian .view-content { overflow: auto } */
+  overflow: hidden !important;
 }
 
-/* Container fills remaining space */
 .terminal-view-content .terminal-container {
-  flex: 1 1 auto;
   width: 100%;
-  overflow: hidden;
+  height: 100%;
 }
 
-.terminal-container .xterm-viewport {
-  overflow-y: auto !important;
+/*
+ * Protect xterm.js positioning from Obsidian global CSS overrides.
+ * Obsidian resets position to static on many elements, which breaks
+ * xterm.js v5 DOM renderer layout:
+ *   - .xterm-screen must be position:relative (containing block for selection overlay)
+ *   - .xterm-helpers must be position:absolute (must not occupy flow space, pushing rows down)
+ */
+.terminal-view-content .xterm-screen {
+  position: relative !important;
 }
 
+.terminal-view-content .xterm-helpers {
+  position: absolute !important;
+  top: 0 !important;
+}
+
+/*
+ * Protect xterm textarea from Obsidian global CSS.
+ * Obsidian applies display/min-height/line-height to all textarea elements,
+ * which makes xterm's hidden composition textarea visible.
+ */
+.terminal-view-content .xterm-helper-textarea {
+  position: absolute !important;
+  opacity: 0 !important;
+  left: -9999em !important;
+  top: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  resize: none !important;
+}
+
+/*
+ * Protect xterm character measurement elements from Obsidian global CSS.
+ * xterm.js uses these to measure character widths — they must be off-screen,
+ * not visible in the terminal. Obsidian resets position to static, making
+ * them render inline (shows $$$$ text over the first terminal line).
+ */
+.terminal-view-content .xterm-char-measure-element {
+  position: absolute !important;
+  left: -9999em !important;
+  top: 0 !important;
+  visibility: hidden !important;
+}
+
+/*
+ * Make selection semi-transparent so text is readable through it.
+ * xterm.js v5 DOM renderer places opaque selection divs ON TOP of text.
+ * Override the solid #264f78 with an rgba version to let text show through.
+ */
+.terminal-view-content .xterm-selection > div {
+  background-color: rgba(38, 79, 120, 0.4) !important;
+}

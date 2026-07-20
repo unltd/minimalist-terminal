@@ -31,6 +31,8 @@ export class TerminalView extends ItemView {
   async onOpen(): Promise<void> {
     const { contentEl } = this;
 
+    if (this.container) return;
+
     contentEl.empty();
     contentEl.classList.add("terminal-view-content");
 
@@ -47,28 +49,23 @@ export class TerminalView extends ItemView {
         cursor: "#d4d4d4",
         selectionBackground: "#264f78",
       },
-      // Start with explicit rows so xterm has size before first fit
       rows: 24,
       cols: 80,
+      scrollback: 1000,
       allowProposedApi: true,
     });
 
     this.fitAddon = new FitAddon();
     this.term.loadAddon(this.fitAddon);
 
-    // Mount xterm
     this.term.open(this.container);
-
-    // Fit after layout
     this.scheduleFit(0);
 
-    // Spawn PTY — cwd is the vault root
     const vaultPath = (this.app.vault.adapter as any).basePath || process.env.HOME || "/";
     this.pty = new PtyBridge(
       {
         onData: (data: string) => this.term!.write(data),
         onExit: () => {
-          // Shell exited — close the terminal pane
           this.app.workspace.detachLeavesOfType(VIEW_TYPE_TERMINAL);
         },
       },
@@ -81,7 +78,6 @@ export class TerminalView extends ItemView {
       this.pty?.write(data);
     });
 
-    // Clipboard
     this.term.attachCustomKeyEventHandler((e: KeyboardEvent): boolean => {
       if (e.ctrlKey && e.shiftKey && e.key === "C") {
         const selection = this.term!.getSelection();
@@ -101,6 +97,7 @@ export class TerminalView extends ItemView {
 
     this.term.element?.addEventListener("contextmenu", (e: MouseEvent) => {
       e.preventDefault();
+      e.stopPropagation();
       navigator.clipboard.readText().then((text: string) => {
         this.pty?.write(text);
       });
@@ -119,7 +116,6 @@ export class TerminalView extends ItemView {
   private scheduleFit(attempt: number): void {
     if (!this.container || !this.fitAddon || !this.term) return;
     const rect = this.container.getBoundingClientRect();
-
     if (rect.width > 0 && rect.height > 0) {
       this.fitAddon.fit();
       if (this.pty) {
@@ -138,6 +134,7 @@ export class TerminalView extends ItemView {
     this.term?.dispose();
     this.term = null;
     this.fitAddon = null;
+    this.container?.remove();
     this.container = null;
   }
 }

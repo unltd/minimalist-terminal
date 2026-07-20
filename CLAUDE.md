@@ -14,11 +14,17 @@ The Obsidian vault for dev testing is mounted at `/Users/pavel/obsidian-notes`.
 
 ```
 src/main.ts          — Plugin entry: register view, ribbon icon, command
-src/TerminalView.ts  — ItemView subclass, owns xterm.js Terminal + FitAddon + WebglAddon
+src/TerminalView.ts  — ItemView subclass, owns xterm.js Terminal + FitAddon (DOM renderer)
 src/PtyBridge.ts     — node-pty wrapper: spawn $SHELL, pipe data between PTY and xterm
 ```
 
 Data flow: `xterm.onData → pty.write → shell → pty.onData → xterm.write`
+
+### Known pitfall: xterm.js vs Obsidian CSS
+
+Obsidian applies global CSS rules (line-height, font, display) to ALL DOM elements including `<span>`. xterm.js DOM renderer creates `<span>` per character — Obsidian CSS shifts these off the internal coordinate grid, breaking selection alignment.
+
+**Defense:** `user-select: none` on all terminal elements blocks **browser DOM selection** (full-width blue rectangles). xterm.js uses its own SelectionManager — not affected by `user-select: none`.
 
 ### Build & Dev
 
@@ -62,3 +68,17 @@ This project uses **claudocker** — a Docker-based containerized development en
 | Skill | Description |
 |---|---|
 | `mounts` | Show mounted directories configured for claudocker |
+
+## Screenshot Analysis Workflow
+
+When the user shares a screenshot (usually saved to `screenshots/` in the project):
+
+1. **Analyze first, then speak.** Use Python/Pillow to extract pixel data: luminance heatmap, blue selection regions, text row positions, selection-to-text alignment. Never guess — read the pixels.
+
+2. **Report findings before proposing fixes.** Describe what the screenshot shows in concrete terms: where are the selection blocks? Where is the text? Do they overlap? Are there ghosts/duplicates?
+
+3. **Propose ranked options with rationale.** Each option must explain why it's better than previous failed attempts. Reference specific commits that were tried and why they didn't work.
+
+4. **Wait for user approval before making ANY code changes.** User selects an option → then implement.
+
+5. **After each attempt, update `docs/selection-fix-log.md`.** Add a new row to the attempts table: attempt number, commit hash, what was changed, why it should work, result (what the screenshot showed), why it didn't work, and screenshot number. Keep the Root Cause Hypothesis section updated with the current best theory.
