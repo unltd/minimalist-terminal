@@ -24,7 +24,6 @@ Build a minimal Obsidian plugin that embeds a real bash terminal with IntelliJ I
 - [ ] Скролл работает
 - [ ] Авто-фокус при открытии
 - [ ] Закрытие по Ctrl+D (exit) не оставляет зомби-процессов
-- [ ] Несколько одновременных терминалов не крашат Obsidian
 
 ## Completed
 
