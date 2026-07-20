@@ -85,6 +85,30 @@ This project uses **claudocker** — a Docker-based containerized development en
 - [[esbuild-native-modules-external]] — нативные модули должны быть external в esbuild
 - [[cdp-remote-debugging]] — отладка через Chrome DevTools Protocol
 
+## Task Documentation
+
+Задачи документируются в `docs/tasks/` по шаблону `docs/tasks/template.md`. Формат имени файла: `YYYY-MM-DD--task-slug.md`.
+
+**Когда создавать задачу:**
+- Новая фича, затрагивающая >1 файл
+- Нетривиальный баг, требующий исследования
+- Архитектурное решение с несколькими вариантами
+- Перед началом крупного рефакторинга
+
+**Оценка сложности в токенах** (поле `Estimate`):
+- **S (~5k)** — мелкий фикс, одна правка в одном файле
+- **M (~20k)** — фича/баг в 2-3 файлах, немного исследования
+- **L (~50k)** — крупная фича, несколько итераций, затрагивает архитектуру
+- **XL (~100k+)** — эпик, требует дизайна, нескольких PR, может быть разбит на подзадачи
+
+**Workflow:**
+1. Создать файл задачи из шаблона, заполнить Overview и Design
+2. Согласовать план с пользователем (если нужно)
+3. В процессе: отмечать Completed, обновлять Remaining
+4. По завершении: Status → done, закоммитить
+
+**Связанные KB-файлы и задачи** линкуются через `[[wikilink]]`.
+
 ## Screenshot Analysis Workflow
 
 When the user shares a screenshot (usually saved to `screenshots/` in the project):

@@ -2,6 +2,7 @@
 
 **Created:** YYYY-MM-DD
 **Status:** ready | in-progress | done
+**Estimate:** S (~5k) | M (~20k) | L (~50k) | XL (~100k+)
 **Branch:** [branch-name]
 <!-- **Depends on:** [[task-name]] -->
 
