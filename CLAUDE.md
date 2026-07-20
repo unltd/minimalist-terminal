@@ -109,6 +109,29 @@ This project uses **claudocker** — a Docker-based containerized development en
 
 **Связанные KB-файлы и задачи** линкуются через `[[wikilink]]`.
 
+## Ideas
+
+Идеи хранятся в `docs/ideas/` по шаблону `docs/ideas/template.md`. Формат имени файла: `YYYY-MM-DD--idea-slug.md`.
+
+**Когда создавать идею:**
+- Придумали фичу, но не уверены, нужна ли она — не хотите сразу заводить задачу
+- Увидели проблему, но решение пока неочевидно
+- Хочется зафиксировать мысль «а что если…» без commitment к реализации
+
+**Статусы:**
+- `idea` — сырая мысль, не думали глубоко
+- `exploring` — изучаем, читаем код, проверяем feasibility
+- `planned` — идея принята, создана задача в `docs/tasks/` (добавить ссылку в `Related`)
+- `discarded` — отклонили (с указанием причины в Notes)
+
+**Workflow:**
+1. Поймали мысль → создать файл из шаблона, статус `idea`
+2. Решили копнуть → статус `exploring`, заполнить Risks / unknowns
+3. Идея принята → статус `planned`, создать задачу, проставить перекрёстные ссылки
+4. Идея отклонена → статус `discarded`, записать причину в Notes
+
+**Связанные задачи и KB** линкуются через `[[wikilink]]` в поле `Related`.
+
 ## Screenshot Analysis Workflow
 
 When the user shares a screenshot (usually saved to `screenshots/` in the project):

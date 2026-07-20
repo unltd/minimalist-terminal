@@ -17,13 +17,13 @@ Build a minimal Obsidian plugin that embeds a real bash terminal with IntelliJ I
 
 ## Definition of Done
 
-- [ ] Плагин собирается и загружается в Obsidian на MacBook Air 2014
-- [ ] Терминал открывается по иконке и через Command Palette
-- [ ] Shell работает: команды выполняются, вывод отображается
-- [ ] Выделение текста мышью работает корректно
-- [ ] Скролл работает
-- [ ] Авто-фокус при открытии
-- [ ] Закрытие по Ctrl+D (exit) не оставляет зомби-процессов
+- [ ] Плагин собирается и загружается в Obsidian на MacBook Air 2014 → `tests/specs/mvp/build-load.spec`
+- [ ] Терминал открывается по иконке и через Command Palette → `tests/specs/mvp/open-terminal.spec`
+- [ ] Shell работает: команды выполняются, вывод отображается → `tests/specs/mvp/shell-exec.spec`
+- [ ] Выделение текста мышью работает корректно → `tests/specs/mvp/selection.spec`
+- [ ] Скролл работает → `tests/specs/mvp/scroll.spec`
+- [ ] Авто-фокус при открытии → `tests/specs/mvp/autofocus.spec`
+- [ ] Закрытие по Ctrl+D (exit) не оставляет зомби-процессов → `tests/specs/mvp/close-no-zombie.spec`
 
 ## Completed
 
