@@ -110,7 +110,22 @@ export class TerminalView extends ItemView {
     });
     this.resizeObserver.observe(this.container);
 
-    this.term.focus();
+    // Focus the terminal. Obsidian steals focus after view open;
+    // we fight back with a capture-phase mousedown (any click in
+    // terminal gives focus) and a retry loop for initial focus.
+    this.container?.addEventListener("mousedown", () => {
+      this.term?.focus();
+    }, { capture: true, passive: true });
+
+    let focusTries = 0;
+    const maxFocusTries = 60; // 3 seconds
+    const tryFocus = () => {
+      if (focusTries >= maxFocusTries || !this.term) return;
+      focusTries++;
+      this.term?.focus();
+      setTimeout(tryFocus, 50);
+    };
+    setTimeout(tryFocus, 50);
   }
 
   private scheduleFit(attempt: number): void {
@@ -121,6 +136,8 @@ export class TerminalView extends ItemView {
       if (this.pty) {
         this.pty.resize(this.term.cols, this.term.rows);
       }
+      // Terminal is ready — take focus
+      this.term.focus();
     } else if (attempt < 20) {
       setTimeout(() => this.scheduleFit(attempt + 1), 100);
     }
