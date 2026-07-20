@@ -68,6 +68,21 @@ This project uses **claudocker** — a Docker-based containerized development en
 | Skill | Description |
 |---|---|
 | `mounts` | Show mounted directories configured for claudocker |
+| `terminal-debug` | Automated Obsidian testing via CDP (eval JS, screenshots, pixel analysis) |
+
+## Knowledge Base
+
+Неочевидные проблемы и решения документируются в `docs/knowledge-base/`. При обнаружении новой проблемы — создать файл по шаблону `docs/knowledge-base/template.md`.
+
+**Важно:** при добавлении новой находки добавлять перекрёстные ссылки `[[related-key]]` на существующие файлы KB.
+
+Текущие находки:
+- [[obsidian-css-overrides-position]] — Obsidian сбрасывает CSS position на static
+- [[electron-require-resolution]] — node-pty требует абсолютный путь в require()
+- [[obsidian-steals-focus]] — Obsidian крадёт фокус после открытия ItemView
+- [[shell-login-interactive-nvm]] — nvm требует login shell (-l -i)
+- [[esbuild-native-modules-external]] — нативные модули должны быть external в esbuild
+- [[cdp-remote-debugging]] — отладка через Chrome DevTools Protocol
 
 ## Screenshot Analysis Workflow
 
