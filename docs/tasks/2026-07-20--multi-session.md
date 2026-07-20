@@ -2,7 +2,7 @@
 
 **Created:** 2026-07-20
 **Status:** ready (patch prepared)
-**Depends on:** [[obsidian-terminal-core]]
+**Depends on:** [[obsidian-terminal-mvp]]
 
 ## Goal
 

@@ -1,4 +1,4 @@
-# Obsidian Terminal — Core Development
+# Obsidian Terminal — MVP
 
 **Created:** 2026-07-20
 **Status:** in-progress
@@ -7,6 +7,24 @@
 ## Overview
 
 Build a minimal Obsidian plugin that embeds a real bash terminal with IntelliJ IDEA-like UX.
+
+## MVP Constraints
+
+- **Target machine:** MacBook Air 2014 (4GB RAM, Intel HD 5000, macOS Big Sur)
+- **Obsidian version:** 1.5.0+
+- **Performance:** терминал должен работать без заметных лагов на этом железе
+- **Scope:** только DOM-рендерер (Canvas/WebGL — не для MVP)
+
+## Definition of Done
+
+- [ ] Плагин собирается и загружается в Obsidian на MacBook Air 2014
+- [ ] Терминал открывается по иконке и через Command Palette
+- [ ] Shell работает: команды выполняются, вывод отображается
+- [ ] Выделение текста мышью работает корректно
+- [ ] Скролл работает
+- [ ] Авто-фокус при открытии
+- [ ] Закрытие по Ctrl+D (exit) не оставляет зомби-процессов
+- [ ] Несколько одновременных терминалов не крашат Obsidian
 
 ## Completed
 
