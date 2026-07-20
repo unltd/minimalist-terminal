@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Tech stack: TypeScript, esbuild, xterm.js (`@xterm/xterm` v5), node-pty (`@lydell/node-pty` v1), vanilla DOM (no UI framework).
 
-The Obsidian vault for dev testing is mounted at `/Users/pavel/obsidian-notes`.
+The Obsidian vault for dev testing is mounted at `/Users/pavel/obsidian-test`.
 
 ### Architecture
 
@@ -60,7 +60,7 @@ This project uses **claudocker** — a Docker-based containerized development en
 - `$PWD` → project directory (read/write inside container)
 - `~/.claude` → `/home/dev/.claude` (Claude config/history)
 - `~/.claude.json` → `/home/dev/.claude.json` (Claude auth)
-- `/Users/pavel/obsidian-notes` → Obsidian vault (external data)
+- `/Users/pavel/obsidian-test` → Obsidian vault (external data)
 - `~/.claudocker/local` → `/home/dev/.claudocker-persist` (persistent container storage)
 
 ### Custom Skills

@@ -7,7 +7,7 @@ services:
     working_dir: ${PWD}
     volumes:
       - ${PWD}:${PWD}
-      - /Users/pavel/obsidian-notes:/Users/pavel/obsidian-notes
+      - /Users/pavel/obsidian-test:/Users/pavel/obsidian-test
       - ${HOME}/.claude:/home/dev/.claude
       - ${HOME}/.claude.json:/home/dev/.claude.json
       - ${HOME}/.claudocker/local:/home/dev/.claudocker-persist

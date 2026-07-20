@@ -29,7 +29,7 @@ Electron-рендерер (в котором работает Obsidian) разр
 private static findNodePty(): string {
   const candidates = [
     "/Users/pavel/IdeaProjects/obsidian-terminal/node_modules/@lydell/node-pty",
-    "/Users/pavel/obsidian-notes/.obsidian/plugins/obsidian-terminal/node_modules/@lydell/node-pty",
+    "/Users/pavel/obsidian-test/.obsidian/plugins/obsidian-terminal/node_modules/@lydell/node-pty",
     path.join(process.cwd(), "node_modules/@lydell/node-pty"),
   ];
   for (const p of candidates) {

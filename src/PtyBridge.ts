@@ -78,7 +78,7 @@ export class PtyBridge {
       // Project root (same path inside container and on host)
       "/Users/pavel/IdeaProjects/obsidian-terminal/node_modules/@lydell/node-pty",
       // Vault plugin dir
-      "/Users/pavel/obsidian-notes/.obsidian/plugins/obsidian-terminal/node_modules/@lydell/node-pty",
+      "/Users/pavel/obsidian-test/.obsidian/plugins/obsidian-terminal/node_modules/@lydell/node-pty",
       // Relative to cwd
       path.join(process.cwd(), "node_modules/@lydell/node-pty"),
     ];

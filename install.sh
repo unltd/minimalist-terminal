@@ -3,9 +3,9 @@ set -euo pipefail
 
 # Install the plugin into an Obsidian vault via symlinks.
 # Usage: ./install.sh [vault-path]
-# Default vault: /Users/pavel/obsidian-notes
+# Default vault: /Users/pavel/obsidian-test
 
-VAULT="${1:-/Users/pavel/obsidian-notes}"
+VAULT="${1:-/Users/pavel/obsidian-test}"
 PLUGIN_ID=$(node -e "console.log(require('./manifest.json').id)" 2>/dev/null) || {
   echo "ERROR: manifest.json not found. Run from the project root." >&2
   exit 1
