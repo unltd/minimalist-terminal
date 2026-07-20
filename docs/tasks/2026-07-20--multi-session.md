@@ -1,7 +1,7 @@
 # Multi-Session Terminal Support
 
 **Created:** 2026-07-20
-**Status:** ready (patch prepared)
+**Status:** ready
 **Depends on:** [[obsidian-terminal-mvp]]
 
 ## Goal
@@ -80,3 +80,7 @@ python3 scripts/cdp-eval.py '
   JSON.stringify(names); // ["Terminal 1", "Terminal 2", "Terminal 3"]
 '
 ```
+
+## Notes
+
+- Patch prepared: `docs/tasks/patches/2026-07-20--multi-session.patch`
