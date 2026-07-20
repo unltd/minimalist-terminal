@@ -1,29 +1,25 @@
 #!/usr/bin/env python3
 """
 Execute JavaScript in Obsidian via CDP (Chrome DevTools Protocol).
-Uses raw sockets to bypass origin restrictions.
-"""
-import sys
-import json
-import socket
-import base64
-import os
-import hashlib
-import struct
+Uses raw WebSocket to bypass origin restrictions.
 
-CDP_BASE = "http://192.168.65.254:9222"
-HEADERS = {"Host": "localhost"}
+Usage: python3 scripts/cdp-eval.py '<javascript>'
+"""
+import sys, json, socket, base64, os, struct, time
+
+
+HOST = "192.168.65.254"
+PORT = 9222
+WS_TIMEOUT = 30  # seconds for JS execution
 
 
 def http_get(path: str) -> dict:
-    """Make an HTTP GET request to CDP and return parsed JSON."""
+    """HTTP GET to CDP endpoint, return parsed JSON."""
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(10)
-    sock.connect(("192.168.65.254", 9222))
-
+    sock.settimeout(5)
+    sock.connect((HOST, PORT))
     request = f"GET {path} HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n"
     sock.send(request.encode())
-
     response = b""
     while True:
         try:
@@ -34,34 +30,30 @@ def http_get(path: str) -> dict:
         except socket.timeout:
             break
     sock.close()
-
-    body = response.split(b"\r\n\r\n", 1)[1]
-    return json.loads(body)
+    return json.loads(response.split(b"\r\n\r\n", 1)[1])
 
 
 def ws_eval(expression: str) -> dict:
-    """Connect via WebSocket, evaluate JS expression, return result."""
-    # Step 1: get page target
+    """Connect via WebSocket to Obsidian, evaluate JS, return result."""
+    # Get Obsidian page target
     targets = http_get("/json")
     pages = [t for t in targets if t.get("type") == "page" and "obsidian" in t.get("url", "")]
     if not pages:
         pages = [t for t in targets if t.get("type") == "page"]
-        raise RuntimeError("No page targets found. Is Obsidian open?")
+    if not pages:
+        raise RuntimeError("No Obsidian page found. Is it running with --remote-debugging-port?")
 
-    page = pages[0]
-    ws_path = page["webSocketDebuggerUrl"]
-    # ws_path looks like: ws://localhost/devtools/page/XXX
-    # Extract just the path
-    path = "/" + ws_path.split("localhost/", 1)[1] if "localhost/" in ws_path else ws_path
+    ws_url = pages[0]["webSocketDebuggerUrl"]
+    ws_path = "/" + ws_url.split("localhost/", 1)[1] if "localhost/" in ws_url else ws_url
 
-    # Step 2: WebSocket handshake (raw)
+    # WebSocket handshake
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(10)
-    sock.connect(("192.168.65.254", 9222))
+    sock.settimeout(WS_TIMEOUT)
+    sock.connect((HOST, PORT))
 
     key = base64.b64encode(os.urandom(16)).decode()
-    request = (
-        f"GET {path} HTTP/1.1\r\n"
+    req = (
+        f"GET {ws_path} HTTP/1.1\r\n"
         "Host: localhost\r\n"
         "Upgrade: websocket\r\n"
         "Connection: Upgrade\r\n"
@@ -70,18 +62,16 @@ def ws_eval(expression: str) -> dict:
         "Origin: http://localhost:9222\r\n"
         "\r\n"
     )
-    sock.send(request.encode())
+    sock.send(req.encode())
 
-    # Read handshake response
     resp = b""
     while b"\r\n\r\n" not in resp:
         resp += sock.recv(4096)
-
     if b"101" not in resp:
         sock.close()
-        raise RuntimeError(f"WebSocket handshake failed: {resp.decode()}")
+        raise RuntimeError(f"WebSocket handshake failed: {resp.decode()[:200]}")
 
-    # Step 3: send evaluation request
+    # Send Runtime.evaluate
     msg = json.dumps({
         "id": 1,
         "method": "Runtime.evaluate",
@@ -91,61 +81,79 @@ def ws_eval(expression: str) -> dict:
             "awaitPromise": True,
         },
     })
+    ws_send(sock, msg)
 
-    # WebSocket frame: FIN=1, opcode=1 (text), masked, payload
+    # Read response
+    result = ws_recv(sock)
+    sock.close()
+    return result
+
+
+def ws_send(sock, msg: str):
+    """Send a text frame over WebSocket."""
     payload = msg.encode()
     mask = os.urandom(4)
     frame = bytearray()
     frame.append(0x81)  # FIN + text opcode
-    length = len(payload)
-    if length < 126:
-        frame.append(0x80 | length)
-    elif length < 65536:
+    n = len(payload)
+    if n < 126:
+        frame.append(0x80 | n)
+    elif n < 65536:
         frame.append(0x80 | 126)
-        frame.extend(struct.pack(">H", length))
+        frame.extend(struct.pack(">H", n))
     else:
         frame.append(0x80 | 127)
-        frame.extend(struct.pack(">Q", length))
+        frame.extend(struct.pack(">Q", n))
     frame.extend(mask)
-    masked_payload = bytes(b ^ mask[i % 4] for i, b in enumerate(payload))
-    frame.extend(masked_payload)
-
+    frame.extend(bytes(b ^ mask[i % 4] for i, b in enumerate(payload)))
     sock.send(bytes(frame))
 
-    # Step 4: read response frame
-    def read_frame():
-        header = b""
-        while len(header) < 2:
-            header += sock.recv(2 - len(header))
-        opcode = header[0] & 0x0F
-        masked = header[1] & 0x80
-        length = header[1] & 0x7F
 
-        if length == 126:
-            length = struct.unpack(">H", sock.recv(2))[0]
-        elif length == 127:
-            length = struct.unpack(">Q", sock.recv(8))[0]
+def ws_recv(sock) -> dict:
+    """Receive a text frame from WebSocket, return parsed JSON."""
+    # Read exactly 2 header bytes
+    header = b""
+    while len(header) < 2:
+        chunk = sock.recv(2 - len(header))
+        if not chunk:
+            raise RuntimeError("WebSocket closed by peer")
+        header += chunk
 
-        # Server frames are not masked, but read mask if present
-        if masked:
-            mask_bytes = sock.recv(4)
+    opcode = header[0] & 0x0F
+    masked = bool(header[1] & 0x80)
+    length = header[1] & 0x7F
 
-        data = b""
-        while len(data) < length:
-            chunk = sock.recv(length - len(data))
-            if not chunk:
-                break
-            data += chunk
+    if length == 126:
+        length = struct.unpack(">H", _recv_exact(sock, 2))[0]
+    elif length == 127:
+        length = struct.unpack(">Q", _recv_exact(sock, 8))[0]
 
-        if masked:
-            data = bytes(b ^ mask_bytes[i % 4] for i, b in enumerate(data))
+    mask_bytes = b""
+    if masked:
+        mask_bytes = _recv_exact(sock, 4)
 
-        return opcode, data.decode()
+    data = _recv_exact(sock, length)
 
-    opcode, response = read_frame()
-    sock.close()
+    if masked:
+        data = bytes(b ^ mask_bytes[i % 4] for i, b in enumerate(data))
 
-    return json.loads(response)
+    if opcode == 0x08:  # Close frame
+        raise RuntimeError(f"WebSocket closed: {data.decode()}")
+    if opcode == 0x09:  # Ping — ignore, read next
+        return ws_recv(sock)
+
+    return json.loads(data.decode())
+
+
+def _recv_exact(sock, n: int) -> bytes:
+    """Receive exactly n bytes from socket."""
+    data = b""
+    while len(data) < n:
+        chunk = sock.recv(n - len(data))
+        if not chunk:
+            raise RuntimeError(f"WebSocket closed after {len(data)} of {n} bytes")
+        data += chunk
+    return data
 
 
 if __name__ == "__main__":
@@ -156,11 +164,13 @@ if __name__ == "__main__":
             r = result["result"]
             if r.get("subtype") == "error":
                 print("JS ERROR:", r.get("description", "unknown"))
+                sys.exit(1)
             else:
                 val = r.get("value", r)
                 print(json.dumps(val, indent=2, ensure_ascii=False))
         elif "error" in result:
             print("CDP ERROR:", json.dumps(result["error"], indent=2))
+            sys.exit(1)
         else:
             print(json.dumps(result, indent=2, ensure_ascii=False))
     except Exception as e:

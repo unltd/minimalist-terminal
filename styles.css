@@ -62,3 +62,22 @@
 .terminal-view-content .xterm-selection > div {
   background-color: rgba(38, 79, 120, 0.4) !important;
 }
+
+/*
+ * Protect xterm viewport from Obsidian global CSS.
+ * .xterm-viewport is the scroll container for the terminal buffer.
+ * Obsidian resets position to static and overflow to visible,
+ * which breaks scrolling — long output overflows instead of scrolling.
+ *
+ * xterm.js v5 CSS requires:
+ *   position: absolute; right:0; left:0; top:0; bottom:0;
+ *   overflow-y: scroll;
+ */
+.terminal-view-content .xterm-viewport {
+  position: absolute !important;
+  overflow-y: scroll !important;
+  right: 0 !important;
+  left: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+}
