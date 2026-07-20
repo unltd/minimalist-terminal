@@ -1,0 +1,11 @@
+{
+	"Args": [
+		"run",
+		"--simple-console",
+		"-v",
+		"--log-level=debug"
+	],
+	"FailedItems": [
+		"specs/mvp/build-load.spec"
+	]
+}

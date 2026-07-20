@@ -1,0 +1,8 @@
+[
+	"gauge",
+	"run",
+	"specs/mvp/build-load.spec",
+	"--simple-console",
+	"-v",
+	"--log-level=debug"
+]

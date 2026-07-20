@@ -42,7 +42,6 @@ def terminal_leaf_removed(seconds: str):
 
 @step("Нет процессов node-pty в системе")
 def no_node_pty_processes():
-    # Allow a moment for OS to reap the process
     time.sleep(1.0)
 
     # Try pgrep first (macOS/Linux)
@@ -56,7 +55,6 @@ def no_node_pty_processes():
         zombies = [p for p in proc.stdout.strip().splitlines() if p.strip()]
         assert len(zombies) == 0, f"Zombie node-pty processes found: {zombies}"
     except FileNotFoundError:
-        # pgrep not available — fall back to ps
         pass
 
     # Fallback: ps aux | grep
@@ -73,7 +71,6 @@ def no_node_pty_processes():
         ]
         assert len(pty_lines) == 0, f"Zombie node-pty processes found: {pty_lines}"
     except FileNotFoundError:
-        # Neither pgrep nor ps available — skip (e.g. minimal container)
         pass
 
 

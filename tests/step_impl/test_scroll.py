@@ -12,7 +12,6 @@ from conftest import cdp_eval
 @step("Ввести команду для генерации <count> строк вывода")
 def generate_output_lines(count: str):
     n = int(count)
-    # Generate N lines of output via seq or printf
     cdp_eval(f"""
         (function () {{
             var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
@@ -20,7 +19,6 @@ def generate_output_lines(count: str):
             view.pty.write("for i in $(seq 1 {n}); do echo line_$i; done\\n");
         }})()
     """)
-    # Wait for all lines to be printed (rough estimate: 100 lines/s)
     wait = max(0.5, n / 100)
     time.sleep(wait)
 
@@ -38,8 +36,9 @@ def viewport_has_scroll():
     assert scroll_top > 0, f"Expected scrollTop > 0, got {scroll_top}"
 
 
-@step("Длина буфера терминала больше 0")
-def buffer_length_positive():
+@step("Длина буфера терминала больше <min_length>")
+def buffer_length_positive(min_length: str):
+    expected = int(min_length)
     length = cdp_eval("""
         (function () {
             var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
@@ -47,7 +46,7 @@ def buffer_length_positive():
             return view.term.buffer.active.length;
         })()
     """)
-    assert length > 0, "Terminal buffer length is 0"
+    assert length > expected, f"Terminal buffer length {length} <= {expected}"
 
 
 @step("Длина буфера терминала не меньше <count>")

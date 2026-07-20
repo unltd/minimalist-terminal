@@ -15,32 +15,33 @@ def close_all_terminal_leaves():
     )
 
 
-@step('Выполнить команду "obsidian-terminal:open-terminal"')
-def run_open_terminal_command():
+@step("Выполнить команду <command_id>")
+def run_command_by_id(command_id: str):
     cdp_eval(
-        "app.commands.executeCommandById('obsidian-terminal:open-terminal');"
+        f"app.commands.executeCommandById('{command_id}');"
     )
 
 
-@step('В workspace есть лист с типом "obsidian-terminal-view"')
-def workspace_has_terminal_leaf():
+@step("В workspace есть лист с типом <view_type>")
+def workspace_has_terminal_leaf(view_type: str):
     result = cdp_eval(
-        "app.workspace.getLeavesOfType('obsidian-terminal-view').length > 0"
+        f"app.workspace.getLeavesOfType('{view_type}').length > 0"
     )
-    assert result is True, "No leaf of type 'obsidian-terminal-view' in workspace"
+    assert result is True, f"No leaf of type '{view_type}' in workspace"
 
 
-@step('DOM содержит элемент с классом "xterm"')
-def dom_has_xterm_element():
+@step("DOM содержит элемент с классом <class_name>")
+def dom_has_element_with_class(class_name: str):
     result = cdp_eval(
-        "document.querySelector('.xterm') !== null"
+        f"document.querySelector('{class_name}') !== null"
     )
-    assert result is True, "No .xterm element found in DOM"
+    assert result is True, f"No '{class_name}' element found in DOM"
 
 
-@step('В workspace ровно 1 лист с типом "obsidian-terminal-view"')
-def workspace_has_exactly_one_terminal_leaf():
-    count = cdp_eval(
-        "app.workspace.getLeavesOfType('obsidian-terminal-view').length"
+@step("В workspace ровно <count> лист с типом <view_type>")
+def workspace_has_exactly_n_leaves(count: str, view_type: str):
+    expected = int(count)
+    found = cdp_eval(
+        f"app.workspace.getLeavesOfType('{view_type}').length"
     )
-    assert count == 1, f"Expected 1 leaf, found {count}"
+    assert found == expected, f"Expected {expected} leaf, found {found}"

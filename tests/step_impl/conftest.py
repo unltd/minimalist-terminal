@@ -65,10 +65,18 @@ def cdp_eval(expression: str, timeout: int = 30) -> object:
         return None
 
     try:
-        return json.loads(output)
+        parsed = json.loads(output)
     except json.JSONDecodeError:
         # Some results are plain strings (e.g. terminal text output)
         return output
+
+    # Unwrap CDP response: {"result": {"type": "...", "value": ...}} → value
+    if isinstance(parsed, dict) and "result" in parsed:
+        result = parsed["result"]
+        if isinstance(result, dict) and "value" in result:
+            return result["value"]
+        return result
+    return parsed
 
 
 def cdp_screenshot(filename: str | None = None) -> str:

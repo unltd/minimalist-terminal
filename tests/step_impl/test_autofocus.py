@@ -19,7 +19,6 @@ def terminal_gets_focus_within(seconds: str):
             (function () {
                 var el = document.activeElement;
                 if (!el) return false;
-                // xterm.js textarea is a child of .xterm or .xterm-screen
                 return el.closest('.xterm') !== null;
             })()
         """)
@@ -27,7 +26,6 @@ def terminal_gets_focus_within(seconds: str):
             return
         time.sleep(0.2)
 
-    # Debug: what IS focused?
     active = cdp_eval("""
         (function () {
             var el = document.activeElement;
@@ -69,7 +67,6 @@ def click_terminal_container():
             var container = document.querySelector('.terminal-container');
             if (!container) throw new Error('.terminal-container not found');
             container.click();
-            // Also dispatch a mousedown — the plugin uses capture-phase mousedown
             var evt = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
             container.dispatchEvent(evt);
         })()
