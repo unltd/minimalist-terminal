@@ -69,6 +69,7 @@ This project uses **claudocker** — a Docker-based containerized development en
 |---|---|
 | `mounts` | Show mounted directories configured for claudocker |
 | `terminal-debug` | Automated Obsidian testing via CDP (eval JS, screenshots, pixel analysis) |
+| `screenshot-debug` | Screenshot → pixel analysis → diagnosis loop for visual bugs |
 
 ## Knowledge Base
 
