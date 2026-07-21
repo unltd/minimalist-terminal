@@ -105,7 +105,7 @@ This project uses **claudocker** — a Docker-based containerized development en
 1. Создать файл задачи из шаблона, заполнить Overview и Design
 2. Согласовать план с пользователем (если нужно)
 3. В процессе: отмечать Completed, обновлять Remaining
-4. По завершении: Status → done, закоммитить
+4. По завершении: отметить все `[x]` в Definition of Done, Status → done, закоммитить
 
 **Связанные KB-файлы и задачи** линкуются через `[[wikilink]]`.
 
