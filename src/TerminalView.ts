@@ -116,7 +116,10 @@ export class TerminalView extends ItemView {
     });
 
     this.resizeObserver = new ResizeObserver(() => {
-      if (!this.fitAddon || !this.pty) return;
+      if (!this.fitAddon || !this.pty || !this.container) return;
+      const rect = this.container.getBoundingClientRect();
+      // Skip if container has no dimensions yet — scheduleFit handles initial sizing
+      if (rect.width === 0 || rect.height === 0) return;
       this.fitAddon.fit();
       this.pty.resize(this.term!.cols, this.term!.rows);
     });
