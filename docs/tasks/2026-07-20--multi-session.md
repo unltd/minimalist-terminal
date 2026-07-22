@@ -1,7 +1,7 @@
 # Multi-Session Terminal Support
 
 **Created:** 2026-07-20
-**Status:** ready
+**Status:** done
 **Depends on:** [[obsidian-terminal-mvp]]
 
 ## Goal
@@ -14,7 +14,7 @@
 
 Позже можно расширить до Variant C: кнопки `[+]` и `[×]` в заголовке, хоткеи для переключения.
 
-## Implementation plan
+## Implementation
 
 ### 1. `main.ts` — всегда создавать новый leaf
 
@@ -24,14 +24,31 @@ let leaf = workspace.getLeavesOfType(VIEW_TYPE_TERMINAL)[0];
 if (!leaf) { leaf = workspace.getLeaf("split", "horizontal"); ... }
 
 // Стало: всегда новый
-const leaf = workspace.getLeaf("split", "horizontal");
+const existing = workspace.getLeavesOfType(VIEW_TYPE_TERMINAL);
+if (existing.length >= MAX_TERMINALS) {
+  workspace.revealLeaf(existing[existing.length - 1]); // фокус на последний
+  return;
+}
+let leaf: WorkspaceLeaf;
+if (existing.length > 0) {
+  // Новая вкладка рядом с существующими терминалами
+  const parent = existing[0].parent;
+  leaf = workspace.createLeafInParent(parent, (parent as any).children.length);
+} else {
+  // Первый терминал: создаём нижнюю панель
+  leaf = workspace.getLeaf("split", "horizontal");
+}
 await leaf.setViewState({ type: VIEW_TYPE_TERMINAL, active: true });
+workspace.revealLeaf(leaf);
 ```
 
-### 2. `TerminalView.ts` — уникальные имена
+**Важно:** `workspace.createLeafInParent(parent, index)` создаёт **таб** (не новый сплит). Без этого каждый терминал открывался бы на отдельном уровне вместо соседней вкладки.
+
+### 2. `TerminalView.ts` — уникальные имена + лимит
 
 ```typescript
-// Module-level counter
+export const MAX_TERMINALS = 10;
+
 let nextTerminal = 1;
 
 export class TerminalView extends ItemView {
@@ -50,37 +67,52 @@ export class TerminalView extends ItemView {
 
 Terminal 1, Terminal 2, ... — Obsidian показывает в заголовке листа.
 
-### 3. Закрытие — уже работает
+### 3. Закрытие — только свой leaf
 
-`onClose()` убивает PTY текущего терминала. Каждый лист закрывается независимо.
+```typescript
+// Было: закрывало ВСЕ терминалы
+onExit: () => {
+  this.app.workspace.detachLeavesOfType(VIEW_TYPE_TERMINAL);
+},
 
-## Patch
-
-Готовый патч: `docs/tasks/patches/2026-07-20--multi-session.patch`
-
-Применить:
-```bash
-git am docs/tasks/patches/2026-07-20--multi-session.patch
+// Стало: закрывает только текущий
+onExit: () => {
+  this.leaf.detach();
+},
 ```
 
-## Open questions
+Каждый лист закрывается независимо. `WorkspaceLeaf.detach()` — публичный метод Obsidian API.
 
-- [ ] При закрытии Terminal 1 и открытии нового — нумерация продолжается (Terminal 4) или переиспользуется (Terminal 1)?
-  - Сейчас: продолжается (nextTerminal только растёт). Можно сделать `Math.max(...существующие номера) + 1`.
-- [ ] Нужен ли лимит на количество терминалов?
-- [ ] Как показывать в табе полезную информацию (cwd, последняя команда)?
+## Resolved questions
 
-## Testing
+- [x] При закрытии Terminal 1 и открытии нового — нумерация продолжается (Terminal 4). Переиспользование «дырок» не делаем — это стандартное поведение IDE.
+- [x] Лимит на количество терминалов: **10** (`MAX_TERMINALS` в `TerminalView.ts`). При превышении фокусирует последний существующий.
+- [x] Табы, не сплиты: `createLeafInParent()` вместо `getLeaf("split")` для последующих терминалов.
+
+## CDP Testing results (2026-07-22)
 
 ```bash
-# Открыть 3 терминала и проверить имена
+# 1. Имена: Terminal 1, Terminal 2, Terminal 3
 python3 scripts/cdp-eval.py '
-  let names = app.workspace.getLeavesOfType("obsidian-terminal-view")
-    .map(l => l.view?.getDisplayText());
-  JSON.stringify(names); // ["Terminal 1", "Terminal 2", "Terminal 3"]
+  app.workspace.getLeavesOfType("obsidian-terminal-view")
+    .map(l => l.view?.getDisplayText())
 '
+# → ["Terminal 1", "Terminal 2", "Terminal 3"]
+
+# 2. Изоляция PTY: export FOO=AAA в T1 → echo $FOO в T2 → []
+# PASS: переменная не видна
+
+# 3. Независимое закрытие: exit в T2 → T1 и T3 остались
+# PASS: 3 → 2 листа
+
+# 4. Лимит 10: 15 вызовов open-terminal → 10 терминалов
+# PASS: count=10
+
+# 5. Табы, не сплиты: все листья в одном parent
+# PASS: sameParent=true
 ```
 
 ## Notes
 
-- Patch prepared: `docs/tasks/patches/2026-07-20--multi-session.patch`
+- Патч `docs/tasks/patches/2026-07-20--multi-session.patch` содержит баги (onExit закрывает все листья, не реализован `createLeafInParent`). Оставлен для истории, не применять.
+- Реальная реализация отличается от патча в трёх местах: `createLeafInParent`, `leaf.detach()`, лимит.

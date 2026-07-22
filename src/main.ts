@@ -1,5 +1,5 @@
-import { Plugin } from "obsidian";
-import { TerminalView, VIEW_TYPE_TERMINAL } from "./TerminalView";
+import { Plugin, WorkspaceLeaf } from "obsidian";
+import { TerminalView, VIEW_TYPE_TERMINAL, MAX_TERMINALS, resetTerminalCounter } from "./TerminalView";
 
 export default class TerminalPlugin extends Plugin {
   async onload() {
@@ -20,15 +20,29 @@ export default class TerminalPlugin extends Plugin {
     this.app.workspace.detachLeavesOfType(VIEW_TYPE_TERMINAL);
   }
 
-  /** Open terminal in a bottom pane. If one exists, reveal it instead. */
+  /** Open a new terminal tab in the bottom pane. Always creates a new leaf. */
   private async openTerminal(): Promise<void> {
     const { workspace } = this.app;
 
-    let leaf = workspace.getLeavesOfType(VIEW_TYPE_TERMINAL)[0];
-    if (!leaf) {
-      leaf = workspace.getLeaf("split", "horizontal");
-      await leaf.setViewState({ type: VIEW_TYPE_TERMINAL, active: true });
+    const existing = workspace.getLeavesOfType(VIEW_TYPE_TERMINAL);
+    if (existing.length >= MAX_TERMINALS) {
+      // Focus the most recently used terminal instead of creating another
+      workspace.revealLeaf(existing[existing.length - 1]);
+      return;
     }
+
+    let leaf: WorkspaceLeaf;
+    if (existing.length > 0) {
+      // Create a new tab next to existing terminals
+      const parent = existing[0].parent;
+      const tabCount = (parent as any).children?.length ?? existing.length;
+      leaf = workspace.createLeafInParent(parent, tabCount);
+    } else {
+      // First terminal after all were closed: restart numbering
+      resetTerminalCounter();
+      leaf = workspace.getLeaf("split", "horizontal");
+    }
+    await leaf.setViewState({ type: VIEW_TYPE_TERMINAL, active: true });
     workspace.revealLeaf(leaf);
   }
 }

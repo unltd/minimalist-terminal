@@ -1,7 +1,7 @@
 # Obsidian Terminal — MVP
 
 **Created:** 2026-07-20
-**Status:** in-progress
+**Status:** done
 **Branch:** main
 
 ## Overview
@@ -17,13 +17,13 @@ Build a minimal Obsidian plugin that embeds a real bash terminal with IntelliJ I
 
 ## Definition of Done
 
-- [ ] Плагин собирается и загружается в Obsidian на MacBook Air 2014 → `tests/specs/mvp/build-load.spec`
-- [ ] Терминал открывается по иконке и через Command Palette → `tests/specs/mvp/open-terminal.spec`
-- [ ] Shell работает: команды выполняются, вывод отображается → `tests/specs/mvp/shell-exec.spec`
-- [ ] Выделение текста мышью работает корректно → `tests/specs/mvp/selection.spec`
-- [ ] Скролл работает → `tests/specs/mvp/scroll.spec`
-- [ ] Авто-фокус при открытии → `tests/specs/mvp/autofocus.spec`
-- [ ] Закрытие по Ctrl+D (exit) не оставляет зомби-процессов → `tests/specs/mvp/close-no-zombie.spec`
+- [x] Плагин собирается и загружается в Obsidian на MacBook Air 2014 → `tests/specs/mvp/build-load.spec` (4/4 PASS)
+- [x] Терминал открывается по иконке и через Command Palette → `tests/specs/mvp/open-terminal.spec` (3/3 PASS)
+- [x] Shell работает: команды выполняются, вывод отображается → `tests/specs/mvp/shell-exec.spec` (3/3 PASS)
+- [x] Выделение текста мышью работает корректно → `tests/specs/mvp/selection.spec` (3/3 PASS)
+- [x] Скролл работает → `tests/specs/mvp/scroll.spec` (2/2 PASS)
+- [x] Авто-фокус при открытии → `tests/specs/mvp/autofocus.spec` (2/2 PASS)
+- [x] Закрытие по Ctrl+D (exit) не оставляет зомби-процессов → `tests/specs/mvp/close-no-zombie.spec` (2/2 PASS)
 
 ## Completed
 

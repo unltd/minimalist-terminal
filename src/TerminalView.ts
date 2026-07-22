@@ -4,8 +4,16 @@ import { FitAddon } from "@xterm/addon-fit";
 import { PtyBridge } from "./PtyBridge";
 
 export const VIEW_TYPE_TERMINAL = "obsidian-terminal-view";
+export const MAX_TERMINALS = 10;
+
+let nextTerminal = 1;
+
+export function resetTerminalCounter(): void {
+  nextTerminal = 1;
+}
 
 export class TerminalView extends ItemView {
+  private readonly terminalNumber: number;
   private term: Terminal | null = null;
   private fitAddon: FitAddon | null = null;
   private pty: PtyBridge | null = null;
@@ -14,6 +22,7 @@ export class TerminalView extends ItemView {
 
   constructor(leaf: WorkspaceLeaf) {
     super(leaf);
+    this.terminalNumber = nextTerminal++;
   }
 
   getViewType(): string {
@@ -21,7 +30,7 @@ export class TerminalView extends ItemView {
   }
 
   getDisplayText(): string {
-    return "Terminal";
+    return `Terminal ${this.terminalNumber}`;
   }
 
   getIcon(): string {
@@ -66,7 +75,7 @@ export class TerminalView extends ItemView {
       {
         onData: (data: string) => this.term!.write(data),
         onExit: () => {
-          this.app.workspace.detachLeavesOfType(VIEW_TYPE_TERMINAL);
+          this.leaf.detach();
         },
       },
       this.term.cols,
