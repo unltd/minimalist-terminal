@@ -42,6 +42,9 @@ export class TerminalView extends ItemView {
 
     if (this.container) return;
 
+    // Pin the leaf so Obsidian does not open notes in the terminal tab group
+    this.leaf.setPinned(true);
+
     contentEl.empty();
     contentEl.classList.add("terminal-view-content");
 
