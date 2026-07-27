@@ -156,4 +156,4 @@ text_rows = (luminance > 35) & (luminance < 80)
 - `/terminal-debug` — общая CDP-отладка (eval, reload, open terminal)
 - `scripts/cdp-screenshot.py` — захват скриншота
 - `scripts/cdp-eval.py` — выполнение JS
-- `docs/selection-fix-log.md` — лог попыток исправления выделения
+- `autodocs/archive/knowledge-base/selection-fix-log.md` — лог попыток исправления выделения

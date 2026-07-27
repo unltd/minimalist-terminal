@@ -1,8 +1,17 @@
 node_modules/
 main.js
 main.js.map
+dist/
 *.log
 .DS_Store
+Thumbs.db
 .obsidian/
+autodocs/
 __pycache__/
 .env
+.vscode/
+.idea/
+*.tsbuildinfo
+*.swp
+*.swo
+*~

@@ -73,7 +73,7 @@ This project uses **claudocker** — a Docker-based containerized development en
 
 ## Knowledge Base
 
-Неочевидные проблемы и решения документируются в `docs/knowledge-base/`. При обнаружении новой проблемы — создать файл по шаблону `docs/knowledge-base/template.md`.
+Неочевидные проблемы и решения документируются в `autodocs/knowledge-base/`. При обнаружении новой проблемы — создать файл по шаблону `autodocs/knowledge-base/template.md`.
 
 **Важно:** при добавлении новой находки добавлять перекрёстные ссылки `[[related-key]]` на существующие файлы KB.
 
@@ -87,7 +87,7 @@ This project uses **claudocker** — a Docker-based containerized development en
 
 ## Task Documentation
 
-Задачи документируются в `docs/tasks/` по шаблону `docs/tasks/template.md`. Формат имени файла: `YYYY-MM-DD--task-slug.md`.
+Задачи документируются в `autodocs/tasks/` по шаблону `autodocs/tasks/template.md`. Формат имени файла: `YYYY-MM-DD--task-slug.md`.
 
 **Когда создавать задачу:**
 - Новая фича, затрагивающая >1 файл
@@ -111,7 +111,7 @@ This project uses **claudocker** — a Docker-based containerized development en
 
 ## Ideas
 
-Идеи хранятся в `docs/ideas/` по шаблону `docs/ideas/template.md`. Формат имени файла: `YYYY-MM-DD--idea-slug.md`.
+Идеи хранятся в `autodocs/ideas/` по шаблону `autodocs/ideas/template.md`. Формат имени файла: `YYYY-MM-DD--idea-slug.md`.
 
 **Когда создавать идею:**
 - Придумали фичу, но не уверены, нужна ли она — не хотите сразу заводить задачу
@@ -121,7 +121,7 @@ This project uses **claudocker** — a Docker-based containerized development en
 **Статусы:**
 - `idea` — сырая мысль, не думали глубоко
 - `exploring` — изучаем, читаем код, проверяем feasibility
-- `planned` — идея принята, создана задача в `docs/tasks/` (добавить ссылку в `Related`)
+- `planned` — идея принята, создана задача в `autodocs/tasks/` (добавить ссылку в `Related`)
 - `discarded` — отклонили (с указанием причины в Notes)
 
 **Workflow:**
@@ -144,4 +144,4 @@ When the user shares a screenshot (usually saved to `screenshots/` in the projec
 
 4. **Wait for user approval before making ANY code changes.** User selects an option → then implement.
 
-5. **After each attempt, update `docs/selection-fix-log.md`.** Add a new row to the attempts table: attempt number, commit hash, what was changed, why it should work, result (what the screenshot showed), why it didn't work, and screenshot number. Keep the Root Cause Hypothesis section updated with the current best theory.
+5. **After each attempt, update `autodocs/archive/knowledge-base/selection-fix-log.md`.** Add a new row to the attempts table: attempt number, commit hash, what was changed, why it should work, result (what the screenshot showed), why it didn't work, and screenshot number. Keep the Root Cause Hypothesis section updated with the current best theory.
