@@ -61,15 +61,15 @@ export function detectShells(): ShellEntry[] {
  * Resolve the shell to use.
  *
  * Priority:
- * 1. User setting (if non-empty and valid)
- * 2. First detected shell (zsh preferred — comes first in KNOWN_SHELL_PATHS)
- * 3. "bash" bareword — let exec/spawn fail with a clear error
+ * 1. Explicit user setting — returned as-is (PtyBridge validates and shows errors)
+ * 2. Auto-detect — first detected shell (zsh preferred)
+ * 3. "bash" bareword — last resort
  */
 export function resolveShell(
   userSetting: string,
   detected: ShellEntry[],
 ): string {
-  if (userSetting && isExecutable(userSetting)) {
+  if (userSetting) {
     return userSetting;
   }
 

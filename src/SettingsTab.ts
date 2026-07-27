@@ -5,7 +5,12 @@ import { detectShells, type ShellEntry } from "./settings";
 export class TerminalSettingsTab extends PluginSettingTab {
   private plugin: TerminalPlugin;
   private shells: ShellEntry[] = [];
-  private useCustom = false;
+  /**
+   * Sticky flag: set to true when user picks "Custom path…" in dropdown.
+   * Survives re-renders so the custom input stays visible while the user types.
+   * Reset to false only when the user picks a detected shell from the dropdown.
+   */
+  private customMode = false;
 
   constructor(app: App, plugin: TerminalPlugin) {
     super(app, plugin);
@@ -17,7 +22,13 @@ export class TerminalSettingsTab extends PluginSettingTab {
     containerEl.empty();
 
     this.shells = detectShells();
-    this.useCustom = this.isCustomPath(this.plugin.settings.shell);
+
+    // Custom mode is sticky: once the user picks "Custom path…" it stays
+    // until they pick a detected shell. Also auto-detect from saved setting.
+    const shellIsCustom =
+      this.plugin.settings.shell !== "" &&
+      !this.shells.some((s) => s.path === this.plugin.settings.shell);
+    const useCustom = this.customMode || shellIsCustom;
 
     // ── Shell selection ──────────────────────────────────────────
 
@@ -34,7 +45,7 @@ export class TerminalSettingsTab extends PluginSettingTab {
         dropdown.addOption("__custom__", "Custom path…");
 
         // Select current value
-        if (this.useCustom) {
+        if (useCustom) {
           dropdown.setValue("__custom__");
         } else if (
           this.plugin.settings.shell &&
@@ -48,20 +59,19 @@ export class TerminalSettingsTab extends PluginSettingTab {
 
         dropdown.onChange(async (value) => {
           if (value === "__custom__") {
-            this.useCustom = true;
-            this.plugin.settings.shell = "";
+            this.customMode = true;
+            // Keep previous shell value (if any) so the user can edit it
           } else {
-            this.useCustom = false;
+            this.customMode = false;
             this.plugin.settings.shell = value;
           }
           await this.plugin.saveSettings();
-          // Re-render to show/hide custom input + warning
           this.display();
         });
       });
 
     // Warning for selected shell
-    const selectedPath = this.useCustom
+    const selectedPath = useCustom
       ? this.plugin.settings.shell
       : this.plugin.settings.shell || this.shells[0]?.path;
     const selectedShell = this.shells.find((s) => s.path === selectedPath);
@@ -75,8 +85,8 @@ export class TerminalSettingsTab extends PluginSettingTab {
 
     // ── Custom path input ────────────────────────────────────────
 
-    if (this.useCustom) {
-      const customSetting = new Setting(containerEl)
+    if (useCustom) {
+      new Setting(containerEl)
         .setName("Custom shell path")
         .setDesc("Absolute path to a shell executable.")
         .addText((text) => {
@@ -86,11 +96,10 @@ export class TerminalSettingsTab extends PluginSettingTab {
             .onChange(async (value) => {
               this.plugin.settings.shell = value.trim();
               await this.plugin.saveSettings();
-              // Re-render to update validation state
               this.display();
             });
 
-          // Validation
+          // Live validation
           const current = this.plugin.settings.shell.trim();
           if (current) {
             this.validateAndShow(text.inputEl, current);
@@ -108,12 +117,6 @@ export class TerminalSettingsTab extends PluginSettingTab {
         attr: { style: "color: #e06c75; margin-top: 8px;" },
       } as any);
     }
-  }
-
-  /** Check whether the current setting is a path not in the detected list. */
-  private isCustomPath(shell: string): boolean {
-    if (!shell) return false;
-    return !this.shells.some((s) => s.path === shell);
   }
 
   /** Live validation: check that the path exists and is executable. */
