@@ -1,7 +1,7 @@
 # Shell Selection via Settings Tab
 
 **Created:** 2026-07-27
-**Status:** ready
+**Status:** done
 **Estimate:** M (~20k)
 **Branch:** —
 **Depends on:** [[2026-07-27--prepare-to-prod-roadmap]] (Этап 1 — B1 fix accepted)
@@ -126,7 +126,7 @@ const KNOWN_SHELLS = [
 
 ## Completed
 
-- [ ] Ничего
+- [x] All — see commits 43c9990, e16761d, c6315b9
 
 ## Remaining
 
