@@ -1,9 +1,9 @@
 # Prepare-to-Prod Roadmap — obsidian-terminal
 
 **Created:** 2026-07-27
-**Status:** ready
+**Status:** in-progress
 **Estimate:** L (~50k)
-**Branch:** —
+**Branch:** main
 
 ## Overview / Goal
 
@@ -11,29 +11,25 @@
 
 Задача возникла по итогам dry-run `/prepare-to-prod --phase 1 --dry-run` (2026-07-24).
 
-## Исходное состояние
+## Исходное состояние (обновлено 2026-07-27)
 
-| Параметр | Значение |
-|----------|----------|
-| Версия | 0.1.4 |
-| Репозиторий | github.com/unltd/obsidian-terminal |
-| Статус | private, активная разработка |
-| Язык | TypeScript (Obsidian plugin) |
-| Тесты | Gauge BDD (7 specs) + pytest |
-| CI | ❌ отсутствует |
-| README | ❌ отсутствует |
-| Документация | ✅ внутренняя (docs/) |
-| Лицензия | ❌ отсутствует |
+| Параметр | Было | Стало |
+|----------|------|-------|
+| Версия | 0.1.4 | 0.1.4 |
+| Статус | private | private |
+| README | ❌ | ✅ |
+| Settings Tab | ❌ | ✅ (shell selection) |
+| Shell по умолчанию | bash (hardcoded) | zsh (авто-детект) |
+| CI | ❌ | ❌ |
+| Лицензия | ❌ | ❌ |
 
-## Критические блокеры (must fix before public)
+## Критические блокеры (must fix before public) — ✅ Этап 1 завершён
 
-**Без этих исправлений проект неработоспособен для внешнего пользователя.**
-
-| # | Чек-лист | Проблема | Файл | Решение |
-|---|----------|----------|------|---------|
-| B1 | — | **Хардкод путей** в `findNodePty()` | `src/PtyBridge.ts:79-81` | Заменить на `require.resolve()` или поиск относительно `__dirname` плагина. Пути `/Users/pavel/...` делают плагин неработоспособным у других |
-| B2 | 1.30 | **`.env` с реальным токеном** в корне | `.env` | Уже в `.gitignore`, но риск случайного коммита. Удалить из рабочей директории, использовать `GITHUB_TOKEN` env |
-| B3 | 1.7-1.12 | **README.md отсутствует** | — | Создать: описание, quickstart, примеры, скриншоты, ограничения, roadmap |
+| # | Статус | Проблема | Коммит |
+|---|--------|----------|--------|
+| B1 | ✅ | **Хардкод путей** в `findNodePty()` | `f9b3e8d` — pluginDir из vault basePath |
+| B2 | ✅ | **`.env` с реальным токеном** | `f9b3e8d` — заменён на placeholder |
+| B3 | ✅ | **README.md отсутствует** | `f9b3e8d`, `3a49650` — создан + обновлён |
 
 ## Высокий приоритет (should fix before public)
 
@@ -69,8 +65,8 @@
 | L1 | ~~**Ghost selection bug**~~ — исправлен (2026-07-24), см. `docs/archive/selection-fix-log.md` | — | — |
 | L2 | **Борьба за фокус** — retry loop до 60 попыток | `TerminalView.ts:204-212` | README → Known Issues |
 | L3 | **Нет синхронизации с темой Obsidian** | `TerminalView.ts:53-63` | README → Limitations |
-| L4 | **Не настраивается** — нет Settings Tab | — | README → Limitations |
-| L5 | **Только bash по умолчанию** | `PtyBridge.ts:37` | README → Limitations |
+| L4 | ~~Не настраивается~~ — Settings Tab с shell selection (2026-07-27) | — | — |
+| L5 | ~~Только bash~~ — zsh default, авто-детект, выбор shell (2026-07-27) | — | — |
 | L6 | **Только desktop** — мобильные не поддерживаются | `manifest.json:8` | README → Limitations |
 | L7 | **macOS-специфичный node-pty форк** | `package.json` | README → Platform support |
 | L8 | **Windows не тестировался** | — | README → Platform support |
@@ -79,11 +75,13 @@
 
 ## Implementation Plan
 
-### Этап 1 — Критические блокеры (~8k токенов)
+### Этап 1 — Критические блокеры ✅ (~12k факт, ~50k с shell-selection)
 
-1. **B1: Убрать хардкод путей** — `require.resolve('@lydell/node-pty')` или поиск от `__dirname` плагина
-2. **B3: README.md** — сгенерировать по чек-листу
-3. **B2: Токен в .env** — manual: пользователь проверяет
+1. ✅ **B1: Убрать хардкод путей** — `f9b3e8d`
+2. ✅ **B3: README.md** — `f9b3e8d`, `3a49650`
+3. ✅ **B2: Токен в .env** — `f9b3e8d`
+4. ✅ **Shell selection via Settings Tab** — `43c9990`, `e16761d`, `c6315b9` (закрывает L4, L5)
+5. ✅ **User feedback loop** (идея) — `dc56bf0`
 
 ### Этап 2 — Высокий приоритет (~12k токенов)
 
@@ -102,6 +100,8 @@
 - [x] B1: `findNodePty()` не содержит хардкод-путей, плагин работает после `git clone + npm ci + npm run build`
 - [x] B3: README.md готов (описание, quickstart, ограничения, скриншоты)
 - [x] B2: `.env` не содержит реального токена
+- [x] L4: Settings Tab (shell selection) — `43c9990`
+- [x] L5: Bash-only → zsh default с авто-детектом — `43c9990`
 - [ ] H1-H5: CONTRIBUTING, CHANGELOG, архитектура, .env.example, скрипты созданы
 - [ ] H6: Платформенная матрица подтверждена
 - [ ] H8-H10: `.gitignore`, `.gitattributes`, `.DS_Store` исправлены
@@ -109,6 +109,15 @@
 - [ ] M2: CI проходит (lint + test + build)
 - [ ] Все 44 пункта `/prepare-to-prod --phase 1` пройдены
 - [ ] Ограничения L1-L10 задокументированы в README
+
+## Progress Log
+
+| Дата | Что |
+|------|-----|
+| 2026-07-27 | Этап 1: B1, B2, B3 — критические блокеры устранены |
+| 2026-07-27 | Shell selection: Settings Tab, zsh default, авто-детект, валидация |
+| 2026-07-27 | README обновлён под shell selection |
+| 2026-07-27 | Идея: user feedback loop (в плагин + Claude-триаж) |
 
 ## Notes
 
