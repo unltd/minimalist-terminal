@@ -2,6 +2,8 @@
 
 Автоматизированное тестирование плагина через Chrome DevTools Protocol из Docker-контейнера.
 
+**Testing patterns & coverage:** [[2026-07-27--cdp-testing-patterns]] — что работает, что нет, текущий % автоматизации.
+
 ## Как это работает
 
 Obsidian работает на Electron (Chromium), который поддерживает [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/). Включаем удалённую отладку флагом `--remote-debugging-port`, и из контейнера подключаемся к Obsidian через WebSocket — выполняем JavaScript, снимаем скриншоты, анализируем DOM.
