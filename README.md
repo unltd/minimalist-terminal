@@ -2,11 +2,12 @@
 
 Embedded terminal for [Obsidian](https://obsidian.md) — like IntelliJ IDEA's terminal, right inside your vault.
 
-![Terminal screenshot](screenshots/18.png)
+![Terminal screenshot](screenshots/20.png)
 
 ## Features
 
-- **Real bash shell** — login+interactive flags, full nvm/PATH support
+- **Configurable shell** — zsh (default), bash, fish, or custom path via Settings Tab
+- **Auto-detection** — finds available shells on your system, prefers modern ones
 - **Multi-terminal** — up to 10 independent terminal tabs
 - **Clipboard** — `Ctrl+Shift+C` copy, `Ctrl+Shift+V` paste, right-click context menu
 - **Resize-aware** — terminal fits the pane, columns/rows synced to PTY
@@ -45,6 +46,10 @@ Settings → Community Plugins → **Terminal** → Enable
 - Click the **terminal icon** in the ribbon (left sidebar)
 - Or use the Command Palette: `Cmd+P` → "Open terminal"
 
+### 4. Configure your shell (optional)
+
+Settings → Community Plugins → **Terminal** → Options (⚙️) → choose from detected shells or enter a custom path.
+
 ## Platform Support
 
 | Platform | Status | Notes |
@@ -59,9 +64,8 @@ The plugin is **desktop only** (`isDesktopOnly: true`). It uses [node-pty](https
 
 ## Limitations
 
-- **No settings tab yet** — font size, theme, scrollback, and shell are not user-configurable (hardcoded defaults)
+- **Limited settings** — shell selection exists, but font size, theme, and scrollback are still hardcoded
 - **No theme sync** — terminal colors don't follow Obsidian's theme changes
-- **Bash only** — `$SHELL` is used, but only bash has been tested
 - **No hotkey customization** — `Ctrl+Shift+C`/`Ctrl+Shift+V` for clipboard are hardcoded
 - **No session persistence** — terminals are lost on Obsidian restart (tmux/screen integration planned)
 - **No tab completion** — Tab key is intercepted by Obsidian; autocomplete not yet implemented
@@ -84,7 +88,7 @@ graph LR
     A[User] -->|types| B[xterm.js Terminal]
     B -->|onData| C[PtyBridge]
     C -->|pty.write| D[node-pty]
-    D -->|spawn| E[bash -l -i]
+    D -->|spawn| E[zsh / bash / fish]
     E -->|stdout| D
     D -->|onData| C
     C -->|term.write| B
@@ -95,9 +99,11 @@ graph LR
 
 | File | Role |
 |------|------|
-| `src/main.ts` | Plugin entry: register view, ribbon icon, command palette |
+| `src/main.ts` | Plugin entry: register view, ribbon, commands, settings |
 | `src/TerminalView.ts` | `ItemView` subclass: xterm.js Terminal + FitAddon |
-| `src/PtyBridge.ts` | node-pty wrapper: spawn `$SHELL`, pipe data between PTY and xterm |
+| `src/PtyBridge.ts` | node-pty wrapper: spawn configured shell, pipe data |
+| `src/settings.ts` | Shell detection, resolution, shell-specific flags |
+| `src/SettingsTab.ts` | Settings UI: dropdown + custom path with validation |
 | `styles.css` | Terminal styling + xterm.js CSS protection rules |
 
 **Tech stack:** TypeScript, esbuild, xterm.js v5, node-pty v1, vanilla DOM.
@@ -123,7 +129,8 @@ gauge run tests/specs/   # Run all specs
 
 ## Roadmap
 
-- [ ] Settings tab: font size, theme, scrollback, default shell
+- [x] Settings tab: shell selection
+- [ ] Settings tab: font size, theme, scrollback
 - [ ] Canvas/WebGL renderer support (performance)
 - [ ] Sidebar mode (left/right panel)
 - [ ] Session persistence via tmux/screen
