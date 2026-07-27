@@ -96,10 +96,17 @@ export class TerminalSettingsTab extends PluginSettingTab {
             .onChange(async (value) => {
               this.plugin.settings.shell = value.trim();
               await this.plugin.saveSettings();
-              this.display();
+              // Inline validation only — NO full re-render (would steal focus)
+              const current = this.plugin.settings.shell.trim();
+              if (current) {
+                this.validateAndShow(text.inputEl, current);
+              } else {
+                text.inputEl.style.borderColor = "";
+                text.inputEl.title = "";
+              }
             });
 
-          // Live validation
+          // Initial validation
           const current = this.plugin.settings.shell.trim();
           if (current) {
             this.validateAndShow(text.inputEl, current);
