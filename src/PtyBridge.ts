@@ -3,6 +3,9 @@ import * as fs from "fs";
 
 /** Thin wrapper over node-pty. Spawns a shell, pipes data in/out. */
 export class PtyBridge {
+  /** Set by the plugin during onload to help find node-pty. */
+  static pluginDir: string = "";
+
   private pty: unknown = null;
   private writeFn: ((data: string) => void) | null = null;
   private resizeFn: ((cols: number, rows: number) => void) | null = null;
@@ -74,14 +77,33 @@ export class PtyBridge {
 
   /** Find node-pty by scanning known locations. */
   private static findNodePty(): string {
-    const candidates = [
-      // Project root (same path inside container and on host)
-      "/Users/pavel/IdeaProjects/obsidian-terminal/node_modules/@lydell/node-pty",
-      // Vault plugin dir
-      "/Users/pavel/obsidian-test/.obsidian/plugins/obsidian-terminal/node_modules/@lydell/node-pty",
-      // Relative to cwd
-      path.join(process.cwd(), "node_modules/@lydell/node-pty"),
-    ];
+    const candidates: string[] = [];
+
+    // 1. Plugin's own node_modules — most reliable for installed plugins.
+    //    The plugin sets PtyBridge.pluginDir to <vault>/.obsidian/plugins/<id>
+    //    during onload; node-pty lives in its node_modules/.
+    if (PtyBridge.pluginDir) {
+      candidates.push(
+        path.join(PtyBridge.pluginDir, "node_modules", "@lydell/node-pty"),
+      );
+    }
+
+    // 2. Try require.resolve — works in dev setups where the module is on the
+    //    Electron renderer's require path.
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const resolved = require.resolve("@lydell/node-pty");
+      // require.resolve returns …/index.js; we need the directory.
+      candidates.push(path.dirname(resolved));
+    } catch {
+      /* not on the module path — skip */
+    }
+
+    // 3. Relative to process.cwd() — works when Obsidian is launched from the
+    //    project root (development).
+    candidates.push(
+      path.join(process.cwd(), "node_modules", "@lydell/node-pty"),
+    );
 
     for (const p of candidates) {
       const indexPath = path.join(p, "index.js");
@@ -90,7 +112,7 @@ export class PtyBridge {
       }
     }
 
-    // Not found — let require throw with a useful error
+    // Not found — let require throw with a useful error message.
     return "@lydell/node-pty";
   }
 

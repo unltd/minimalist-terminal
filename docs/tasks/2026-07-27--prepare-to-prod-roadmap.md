@@ -1,0 +1,120 @@
+# Prepare-to-Prod Roadmap — obsidian-terminal
+
+**Created:** 2026-07-27
+**Status:** ready
+**Estimate:** L (~50k)
+**Branch:** —
+
+## Overview / Goal
+
+Подготовить obsidian-terminal к публичному использованию. Устранить блокеры, создать документацию, скрипты, CI — по чек-листу `/prepare-to-prod` (44 пункта).
+
+Задача возникла по итогам dry-run `/prepare-to-prod --phase 1 --dry-run` (2026-07-24).
+
+## Исходное состояние
+
+| Параметр | Значение |
+|----------|----------|
+| Версия | 0.1.4 |
+| Репозиторий | github.com/unltd/obsidian-terminal |
+| Статус | private, активная разработка |
+| Язык | TypeScript (Obsidian plugin) |
+| Тесты | Gauge BDD (7 specs) + pytest |
+| CI | ❌ отсутствует |
+| README | ❌ отсутствует |
+| Документация | ✅ внутренняя (docs/) |
+| Лицензия | ❌ отсутствует |
+
+## Критические блокеры (must fix before public)
+
+**Без этих исправлений проект неработоспособен для внешнего пользователя.**
+
+| # | Чек-лист | Проблема | Файл | Решение |
+|---|----------|----------|------|---------|
+| B1 | — | **Хардкод путей** в `findNodePty()` | `src/PtyBridge.ts:79-81` | Заменить на `require.resolve()` или поиск относительно `__dirname` плагина. Пути `/Users/pavel/...` делают плагин неработоспособным у других |
+| B2 | 1.30 | **`.env` с реальным токеном** в корне | `.env` | Уже в `.gitignore`, но риск случайного коммита. Удалить из рабочей директории, использовать `GITHUB_TOKEN` env |
+| B3 | 1.7-1.12 | **README.md отсутствует** | — | Создать: описание, quickstart, примеры, скриншоты, ограничения, roadmap |
+
+## Высокий приоритет (should fix before public)
+
+| # | Чек-лист | Проблема | Решение |
+|---|----------|----------|---------|
+| H1 | 1.13 | **CONTRIBUTING.md** отсутствует | Из `templates/CONTRIBUTING.md` |
+| H2 | 1.14 | **CHANGELOG.md** отсутствует | Заготовка + `git log --oneline` |
+| H3 | 1.15 | **Схема архитектуры** | Mermaid: main.ts → TerminalView → PtyBridge → node-pty |
+| H4 | 1.17 | **`.env.example`** отсутствует | Извлечь `SHELL`, `HOME` из кода |
+| H5 | 1.18-1.23 | **Скрипты + Makefile** отсутствуют | `scripts/build.sh`, `test.sh`, `lint.sh`, `Makefile` |
+| H6 | 1.29 | **Платформенная матрица** | Подтвердить: macOS ✅ / Linux ✅(claudocker) / Windows ⚠️ |
+| H7 | 1.35 | **Английский в `docs/`** | `cdp-testing.md`, `token-log.md`, `selection-fix-log.md` на русском — перевести или решить что это internal-only |
+| H8 | 1.2 | **`.gitignore` неполный** | Добавить `.vscode/`, `.idea/`, `*.swp`, `*~`, `.pytest_cache/` |
+| H9 | 1.3 | **`.gitattributes`** отсутствует | Создать с `* text=auto` |
+| H10 | 1.6 | **`.DS_Store` в репо** | `git rm --cached .DS_Store` |
+
+## Средний приоритет (nice to have)
+
+| # | Чек-лист | Что | Решение |
+|---|----------|-----|---------|
+| M1 | 2.1 | **Лицензия** | Выбрать и добавить (MIT?) |
+| M2 | 2.4 | **CI/CD** | GitHub Actions: lint → test → build |
+| M3 | 2.6-2.7 | **Issue/PR templates** | Уже есть в `.github/`, актуализировать |
+| M4 | 2.10 | **Первый публичный релиз** | v0.2.0 (с учётом B1) |
+| M5 | 3.4 | **console.error** | `TerminalView.ts:261` — ок, это логгирование ошибки |
+| M6 | — | **Linux без контейнера** | Протестировать сборку и запуск на голом Linux |
+| M7 | — | **Windows тестирование** | ConPTY + Win 10 1809+. Нужен волонтёр или VM |
+
+## Известные ограничения (не блокеры, но надо документировать)
+
+| # | Ограничение | Где искать | Документировать в |
+|---|-------------|-----------|-------------------|
+| L1 | ~~**Ghost selection bug**~~ — исправлен (2026-07-24), см. `docs/archive/selection-fix-log.md` | — | — |
+| L2 | **Борьба за фокус** — retry loop до 60 попыток | `TerminalView.ts:204-212` | README → Known Issues |
+| L3 | **Нет синхронизации с темой Obsidian** | `TerminalView.ts:53-63` | README → Limitations |
+| L4 | **Не настраивается** — нет Settings Tab | — | README → Limitations |
+| L5 | **Только bash по умолчанию** | `PtyBridge.ts:37` | README → Limitations |
+| L6 | **Только desktop** — мобильные не поддерживаются | `manifest.json:8` | README → Limitations |
+| L7 | **macOS-специфичный node-pty форк** | `package.json` | README → Platform support |
+| L8 | **Windows не тестировался** | — | README → Platform support |
+| L9 | **MAX_TERMINALS = 10** | `TerminalView.ts:7` | Возможно, не стоит упоминать |
+| L10 | **Хоткеи не настраиваются** | `TerminalView.ts:96-116` | README → Limitations |
+
+## Implementation Plan
+
+### Этап 1 — Критические блокеры (~8k токенов)
+
+1. **B1: Убрать хардкод путей** — `require.resolve('@lydell/node-pty')` или поиск от `__dirname` плагина
+2. **B3: README.md** — сгенерировать по чек-листу
+3. **B2: Токен в .env** — manual: пользователь проверяет
+
+### Этап 2 — Высокий приоритет (~12k токенов)
+
+4. H1-H5: CONTRIBUTING, CHANGELOG, архитектура, .env.example, скрипты + Makefile
+5. H6: Платформенная матрица (ask пользователя)
+6. H7-H10: Гигиена репозитория
+
+### Этап 3 — Средний приоритет (~10k токенов)
+
+7. M1: Лицензия
+8. M2: CI/CD
+9. M4: Релиз v0.2.0
+
+## Definition of Done
+
+- [x] B1: `findNodePty()` не содержит хардкод-путей, плагин работает после `git clone + npm ci + npm run build`
+- [x] B3: README.md готов (описание, quickstart, ограничения, скриншоты)
+- [x] B2: `.env` не содержит реального токена
+- [ ] H1-H5: CONTRIBUTING, CHANGELOG, архитектура, .env.example, скрипты созданы
+- [ ] H6: Платформенная матрица подтверждена
+- [ ] H8-H10: `.gitignore`, `.gitattributes`, `.DS_Store` исправлены
+- [ ] M1: LICENSE добавлен
+- [ ] M2: CI проходит (lint + test + build)
+- [ ] Все 44 пункта `/prepare-to-prod --phase 1` пройдены
+- [ ] Ограничения L1-L10 задокументированы в README
+
+## Notes
+
+- Чек-лист: `/prepare-to-prod` (44 пункта)
+- Идея: [[2026-07-20--pre-prod-to-prod-checklist]] (в obsidian-notes vault)
+- Task в vault: [[2026-07-24--prepare-to-prod-skill]]
+- Тесты уже есть (Gauge BDD) — это плюс
+- Зависимости чисты (0 vulnerabilities) — ещё плюс
+- Самое трудное позади: 15 попыток исправить ghost selection → проблема понята глубоко. Остальное — механика.

@@ -1,8 +1,21 @@
+import * as path from "path";
 import { Plugin, WorkspaceLeaf } from "obsidian";
 import { TerminalView, VIEW_TYPE_TERMINAL, MAX_TERMINALS, resetTerminalCounter } from "./TerminalView";
+import { PtyBridge } from "./PtyBridge";
 
 export default class TerminalPlugin extends Plugin {
   async onload() {
+    // Tell PtyBridge where the plugin is installed so it can find node-pty.
+    // In Electron's renderer, require() searches from Obsidian.app, not our
+    // plugin directory, so we compute the absolute path from the vault root.
+    const basePath: string = (this.app.vault.adapter as any).basePath || "";
+    PtyBridge.pluginDir = path.join(
+      basePath,
+      ".obsidian",
+      "plugins",
+      this.manifest.id,
+    );
+
     this.registerView(VIEW_TYPE_TERMINAL, (leaf) => new TerminalView(leaf));
 
     this.addRibbonIcon("terminal", "Open terminal", () => {
