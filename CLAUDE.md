@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Tech stack: TypeScript, esbuild, xterm.js (`@xterm/xterm` v5), node-pty (`@lydell/node-pty` v1), vanilla DOM (no UI framework).
 
-The Obsidian vault for dev testing is mounted at `/Users/pavel/obsidian-test`.
+**Testing vault:** `/Users/pavel/obsidian-test`. **All testing (CDP, install.sh, manual verification) MUST target this vault only — NEVER the main vault `/Users/pavel/obsidian-notes`.** The main vault is production; breaking it with experimental plugin changes is unacceptable.
 
 ### Architecture
 

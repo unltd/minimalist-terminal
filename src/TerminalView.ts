@@ -6,6 +6,13 @@ import { PtyBridge } from "./PtyBridge";
 export const VIEW_TYPE_TERMINAL = "obsidian-terminal-view";
 export const MAX_TERMINALS = 10;
 
+/** Shell path, set by the plugin from user settings before opening views. */
+export let terminalShell: string = "";
+
+export function setTerminalShell(s: string): void {
+  terminalShell = s;
+}
+
 let nextTerminal = 1;
 
 export function resetTerminalCounter(): void {
@@ -84,6 +91,7 @@ export class TerminalView extends ItemView {
       this.term.cols,
       this.term.rows,
       vaultPath,
+      terminalShell || process.env.SHELL || "bash",
     );
 
     this.term.onData((data: string) => {

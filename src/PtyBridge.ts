@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as fs from "fs";
+import { shellFlags } from "./settings";
 
 /** Thin wrapper over node-pty. Spawns a shell, pipes data in/out. */
 export class PtyBridge {
@@ -16,6 +17,7 @@ export class PtyBridge {
     cols: number,
     rows: number,
     cwd: string,
+    shell: string,
   ) {
     let spawn: Function;
 
@@ -37,16 +39,31 @@ export class PtyBridge {
       return;
     }
 
-    const shell = process.env.SHELL || "bash";
+    // Verify the shell exists before spawning
+    if (!fs.existsSync(shell)) {
+      this.callbacks.onData(
+        `\r\n\x1b[31m[Shell not found]\x1b[0m\r\n` +
+          `${shell} does not exist.\r\n` +
+          `Go to Settings → Community Plugins → Terminal → Options to select a different shell.\r\n\r\n`,
+      );
+      this.callbacks.onExit(-1);
+      return;
+    }
+
+    const flags = shellFlags(shell);
+
+    // Inherit parent env but override SHELL so tools that read $SHELL
+    // (nvm, shell scripts, etc.) see the correct shell.
+    const env = { ...(process.env as { [key: string]: string }) };
+    env.SHELL = shell;
 
     try {
-      // -l (login) + -i (interactive): sources .bash_profile AND .bashrc so PATH is complete
-      const pty = spawn(shell, ["-l", "-i"], {
+      const pty = spawn(shell, flags, {
         name: "xterm-256color",
         cols,
         rows,
         cwd,
-        env: process.env as { [key: string]: string },
+        env,
       });
 
       pty.onData((data: string) => {
@@ -69,6 +86,7 @@ export class PtyBridge {
     } catch (e) {
       this.callbacks.onData(
         `\r\n\x1b[31m[Failed to spawn shell]\x1b[0m\r\n` +
+          `Shell: ${shell} ${flags.join(" ")}\r\n` +
           `Error: ${(e as Error).message}\r\n\r\n`,
       );
       this.callbacks.onExit(-1);
