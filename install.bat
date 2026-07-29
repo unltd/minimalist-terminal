@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-:: Install obsidian-terminal plugin into an Obsidian vault.
+:: install.bat — Install obsidian-terminal plugin into an Obsidian vault.
 :: Usage: install.bat [vault-path]
 ::
 :: vault-path is required — either as a command-line argument or
@@ -10,15 +10,14 @@ setlocal enabledelayedexpansion
 set "PLUGIN_DIR=%~dp0"
 set "VAULT=%~1"
 
-if not "%VAULT%"=="" goto :have_vault
-
 :ask_again
-set /p "VAULT=Enter vault path: "
-if "%VAULT%"=="" goto :ask_again
+if "%VAULT%"=="" (
+    set /p "VAULT=Enter vault path: "
+    if "!VAULT!"=="" goto :ask_again
+)
 
-:have_vault
 :: Remove trailing backslash if present
-if "%VAULT:~-1%"=="\" set "VAULT=%VAULT:~0,-1%"
+if "!VAULT:~-1!"=="\" set "VAULT=!VAULT:~0,-1!"
 
 set "TARGET=!VAULT!\.obsidian\plugins\obsidian-terminal"
 
@@ -41,26 +40,31 @@ echo.
 echo Installing dependencies (this may take a minute)...
 
 where npm >nul 2>&1
-if !errorlevel!==1 (
-    echo [WARN] npm not found — skipping dependency install.
-    echo        Install Node.js (https://nodejs.org) and run:
-    echo        cd /d "!TARGET!" ^&^& npm install --production
-    goto :done
-)
+if !errorlevel! neq 0 goto :no_npm
 
 cd /d "!TARGET!"
 call npm install --production
-if !errorlevel!==1 (
+if !errorlevel! neq 0 (
     echo [WARN] npm install failed. Try manually:
-    echo        cd /d "!TARGET!" ^&^& npm install --production
+    goto :show_manual
 )
+goto :install_done
 
-:done
+:no_npm
+echo [WARN] npm not found — skipping dependency install.
+
+:show_manual
+echo        cd /d "!TARGET!"
+echo        npm install --production
+
+:install_done
 echo.
-echo Done! Now enable the plugin:
+echo Done. Now enable the plugin:
 echo   Settings ^> Community Plugins ^> Terminal ^> Enable
 echo.
-echo For CDP testing, run: run-cdp.bat "!VAULT!"
+echo For CDP debugging:
+echo   debug.bat "!VAULT!"
+echo.
 
 pause
 endlocal
