@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Take a screenshot of the Obsidian page via CDP. Saves to screenshots/ directory."""
+"""Take a screenshot of the Obsidian page via CDP. Saves to <project-root>/screenshots/."""
 import sys
 import json
 import socket
@@ -11,7 +11,7 @@ HOST = os.environ.get("CDP_HOST", "192.168.65.254")
 PORT = int(os.environ.get("CDP_PORT", "9222"))
 OUTPUT_DIR = os.environ.get(
     "CDP_SCREENSHOT_DIR",
-    "/Users/pavel/IdeaProjects/obsidian-terminal/screenshots",
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "screenshots"),
 )
 
 

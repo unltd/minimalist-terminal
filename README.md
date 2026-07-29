@@ -2,7 +2,7 @@
 
 Embedded terminal for [Obsidian](https://obsidian.md) — like IntelliJ IDEA's terminal, right inside your vault.
 
-![Terminal screenshot](screenshots/20.png)
+![Terminal screenshot](assets/terminal-screenshot.png)
 
 ## Features
 

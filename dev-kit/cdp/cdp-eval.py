@@ -3,7 +3,7 @@
 Execute JavaScript in Obsidian via CDP (Chrome DevTools Protocol).
 Uses raw WebSocket to bypass origin restrictions.
 
-Usage: python3 scripts/cdp-eval.py '<javascript>'
+Usage: python3 dev-kit/cdp/cdp-eval.py '<javascript>'
 """
 import sys, json, socket, base64, os, struct, time
 

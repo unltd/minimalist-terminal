@@ -6,7 +6,7 @@ user-invocable: true
 
 # terminal-debug
 
-Автоматизированная отладка плагина через Chrome DevTools Protocol. Скрипты `scripts/cdp-eval.py` и `scripts/cdp-screenshot.py` позволяют выполнять JS в Obsidian и делать скриншоты из контейнера.
+Автоматизированная отладка плагина через Chrome DevTools Protocol. Скрипты `dev-kit/cdp/cdp-eval.py` и `dev-kit/cdp/cdp-screenshot.py` позволяют выполнять JS в Obsidian и делать скриншоты из контейнера.
 
 ## Запуск Obsidian с CDP
 
@@ -30,21 +30,21 @@ debug.bat "C:\Users\tania\Documents\obsidian-test"
 ### cdp-eval.py — выполнить JS
 
 ```bash
-python3 scripts/cdp-eval.py '<expression>'
+python3 dev-kit/cdp/cdp-eval.py '<expression>'
 ```
 
 ### cdp-screenshot.py — скриншот
 
 ```bash
-python3 scripts/cdp-screenshot.py          # screenshots/N.png
-python3 scripts/cdp-screenshot.py name.png # screenshots/name.png
+python3 dev-kit/cdp/cdp-screenshot.py          # screenshots/N.png
+python3 dev-kit/cdp/cdp-screenshot.py name.png # screenshots/name.png
 ```
 
 ## Часто используемые команды
 
 ### Перезагрузить плагин
 ```bash
-python3 scripts/cdp-eval.py '
+python3 dev-kit/cdp/cdp-eval.py '
   app.plugins.disablePlugin("obsidian-terminal");
   await new Promise(r => setTimeout(r, 300));
   app.plugins.enablePlugin("obsidian-terminal");
@@ -53,7 +53,7 @@ python3 scripts/cdp-eval.py '
 
 ### Открыть терминал
 ```bash
-python3 scripts/cdp-eval.py '
+python3 dev-kit/cdp/cdp-eval.py '
   let leaf = app.workspace.getLeaf("split", "horizontal");
   await leaf.setViewState({ type: "obsidian-terminal-view", active: true });
   app.workspace.revealLeaf(leaf);

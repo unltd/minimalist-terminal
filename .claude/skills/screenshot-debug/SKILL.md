@@ -20,9 +20,9 @@ user-invocable: true
 ### Захват
 
 ```bash
-python3 scripts/cdp-screenshot.py              # screenshots/N.png (автоинкремент)
-python3 scripts/cdp-screenshot.py name.png     # screenshots/name.png
-python3 scripts/cdp-screenshot.py via-eval.png # скриншот + доп. JS перед захватом
+python3 dev-kit/cdp/cdp-screenshot.py              # screenshots/N.png (автоинкремент)
+python3 dev-kit/cdp/cdp-screenshot.py name.png     # screenshots/name.png
+python3 dev-kit/cdp/cdp-screenshot.py via-eval.png # скриншот + доп. JS перед захватом
 ```
 
 ### Пиксельный анализ (PIL)
@@ -129,12 +129,12 @@ text_rows = (luminance > 35) & (luminance < 80)
 
 ```
 1. Собрал:       npm run build
-2. Перезагрузил: python3 scripts/cdp-eval.py '...reload plugin...'
-3. Настроил:     python3 scripts/cdp-eval.py '...открыть терминал + выделить...'
-4. Скриншот:     python3 scripts/cdp-screenshot.py
+2. Перезагрузил: python3 dev-kit/cdp/cdp-eval.py '...reload plugin...'
+3. Настроил:     python3 dev-kit/cdp/cdp-eval.py '...открыть терминал + выделить...'
+4. Скриншот:     python3 dev-kit/cdp/cdp-screenshot.py
 5. Прочитал:     Read screenshots/N.png
 6. Пиксели:      python3 -c "анализ PIL"
-7. DOM:          python3 scripts/cdp-eval.py '...диагностика...'
+7. DOM:          python3 dev-kit/cdp/cdp-eval.py '...диагностика...'
 8. Гипотеза:     сопоставить пиксели с DOM → найти причину
 9. Исправил:     правка в styles.css или TerminalView.ts
 10. Goto 1:      повторить для верификации
@@ -154,6 +154,6 @@ text_rows = (luminance > 35) & (luminance < 80)
 - [[cdp-remote-debugging]] — настройка CDP, raw WebSocket, Origin
 - [[obsidian-css-overrides-position]] — Obsidian сбрасывает position на static
 - `/terminal-debug` — общая CDP-отладка (eval, reload, open terminal)
-- `scripts/cdp-screenshot.py` — захват скриншота
-- `scripts/cdp-eval.py` — выполнение JS
+- `dev-kit/cdp/cdp-screenshot.py` — захват скриншота
+- `dev-kit/cdp/cdp-eval.py` — выполнение JS
 - `autodocs/archive/knowledge-base/selection-fix-log.md` — лог попыток исправления выделения

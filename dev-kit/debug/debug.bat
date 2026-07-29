@@ -237,11 +237,11 @@ echo ========================================
 if "%CDP_READY%"=="1" (
     echo.
     echo Remote dev machine:
-    echo   CDP_HOST=%LOCAL_IP% python3 debug.py test
-    echo   CDP_HOST=%LOCAL_IP% python3 debug.py screenshot
+    echo   CDP_HOST=%LOCAL_IP% python3 dev-kit/debug/debug.py test
+    echo   CDP_HOST=%LOCAL_IP% python3 dev-kit/debug/debug.py screenshot
     echo.
     echo Local:
-    echo   python3 debug.py test --local
+    echo   python3 dev-kit/debug/debug.py test --local
 )
 if "%CDP_READY%"=="0" (
     echo.

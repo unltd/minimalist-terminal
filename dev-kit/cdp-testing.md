@@ -19,8 +19,8 @@ Obsidian runs on Electron (Chromium), which supports the [Chrome DevTools Protoc
 ├─────────────────────┼───────────────────────────┤
 │ Docker container    │                            │
 │  ┌──────────────────┴───────────────────────┐   │
-│  │ scripts/cdp-eval.py                      │   │
-│  │ scripts/cdp-screenshot.py                │   │
+│  │ dev-kit/cdp/cdp-eval.py                      │   │
+│  │ dev-kit/cdp/cdp-screenshot.py                │   │
 │  │  ↓                                       │   │
 │  │  Raw WebSocket → CDP → JS execution      │   │
 │  │  → DOM queries / screenshots             │   │
@@ -42,22 +42,22 @@ DevTools listens on `ws://127.0.0.1:9222` after launch.
 
 ## Tools
 
-### `scripts/cdp-eval.py`
+### `dev-kit/cdp/cdp-eval.py`
 
 Executes JavaScript in Obsidian's context and returns the result.
 
 ```bash
-python3 scripts/cdp-eval.py '<javascript expression>'
+python3 dev-kit/cdp/cdp-eval.py '<javascript expression>'
 ```
 
 **Examples:**
 
 ```bash
 # Connection check
-python3 scripts/cdp-eval.py "'hello from obsidian!'"
+python3 dev-kit/cdp/cdp-eval.py "'hello from obsidian!'"
 
 # DOM diagnostics
-python3 scripts/cdp-eval.py '
+python3 dev-kit/cdp/cdp-eval.py '
   JSON.stringify({
     screen: document.querySelector(".xterm-screen")?.className,
     selectionPos: getComputedStyle(document.querySelector(".xterm-selection")).position
@@ -65,34 +65,34 @@ python3 scripts/cdp-eval.py '
 '
 
 # Plugin actions
-python3 scripts/cdp-eval.py '
+python3 dev-kit/cdp/cdp-eval.py '
   app.plugins.disablePlugin("obsidian-terminal");
   app.plugins.enablePlugin("obsidian-terminal");
   "reloaded"
 '
 
 # Open terminal
-python3 scripts/cdp-eval.py '
+python3 dev-kit/cdp/cdp-eval.py '
   let leaf = app.workspace.getLeaf("split", "horizontal");
   leaf.setViewState({ type: "obsidian-terminal-view", active: true });
   "opened"
 '
 
 # Select text in terminal
-python3 scripts/cdp-eval.py '
+python3 dev-kit/cdp/cdp-eval.py '
   let view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
   view?.term?.selectLines(0, 3);
   "selected"
 '
 ```
 
-### `scripts/cdp-screenshot.py`
+### `dev-kit/cdp/cdp-screenshot.py`
 
 Takes a screenshot of the Obsidian window.
 
 ```bash
-python3 scripts/cdp-screenshot.py            # auto-name (next number)
-python3 scripts/cdp-screenshot.py test.png   # specific name
+python3 dev-kit/cdp/cdp-screenshot.py            # auto-name (next number)
+python3 dev-kit/cdp/cdp-screenshot.py test.png   # specific name
 ```
 
 Screenshots are saved to `screenshots/`.

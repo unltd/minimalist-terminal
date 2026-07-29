@@ -18,3 +18,4 @@ services:
       - HOME=/home/dev
       - CLAUDE_CONFIG_DIR=/home/dev/.claude
       - CLAUDE_DANGEROUS_SKIP_PERMISSIONS=true
+      - CLAUDOCKER_DOCKER_MODE=dind

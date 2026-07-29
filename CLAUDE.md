@@ -57,6 +57,7 @@ The plugin is **desktop only** (`isDesktopOnly: true`) because node-pty requires
 
 - PTY process must be killed in `onClose()` to avoid zombie shells
 - node-pty native addon must match Obsidian's Electron ABI — use `@lydell/node-pty` for better prebuild coverage
+- Build artifacts (`.zip`, bundles, installers) go to `build/` — never to repo root. Both `build/` and `*.zip` are in `.gitignore`.
 
 ## Development Environment
 

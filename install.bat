@@ -63,7 +63,7 @@ echo Done. Now enable the plugin:
 echo   Settings ^> Community Plugins ^> Terminal ^> Enable
 echo.
 echo For CDP debugging:
-echo   debug.bat "!VAULT!"
+echo   dev-kit\debug\debug.bat "!VAULT!"
 echo.
 
 pause

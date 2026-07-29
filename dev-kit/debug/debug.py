@@ -31,7 +31,7 @@ from datetime import datetime
 HOST = os.environ.get("CDP_HOST", "127.0.0.1")
 PORT = int(os.environ.get("CDP_PORT", "9222"))
 OUTPUT_DIR = os.environ.get("CDP_SCREENSHOT_DIR",
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "screenshots"))
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "screenshots"))
 VAULT = os.environ.get("CDP_VAULT") or None
 TIMEOUT = int(os.environ.get("CDP_TIMEOUT", "15"))
 
