@@ -42,7 +42,19 @@ The plugin is **desktop only** (`isDesktopOnly: true`) because node-pty requires
 - Plugin format: CommonJS (`format: "cjs"` in esbuild)
 - Obsidian API (`obsidian`) and node builtins must be in esbuild `external`
 - Target Obsidian minAppVersion: 1.5.0+
-- `Ctrl+C`/`Ctrl+V` pass through to PTY; clipboard uses `Ctrl+Shift+C`/`Ctrl+Shift+V`
+### Keyboard shortcuts
+
+| Shortcut | Context | Action |
+|----------|---------|--------|
+| `Ctrl+C` | Has selection | Copy selection to clipboard |
+| `Ctrl+C` | No selection | Send SIGINT (`\x03`) to shell |
+| `Ctrl+V` | Any | Paste from clipboard |
+| `Ctrl+Shift+C` | Any | Copy selection to clipboard |
+| `Ctrl+Shift+V` | Any | Paste from clipboard |
+| `Right-click` | Terminal | Paste from clipboard |
+
+**Design note:** Paste is handled synchronously via `e.clipboardData.getData('text/plain')` in a capture-phase listener on the `<textarea>`. `stopImmediatePropagation()` prevents xterm.js from also processing the event. Single code path, no async `readText()`, no double paste. Copy uses `preventDefault` on the `copy` event to block xterm.js's duplicate handler.
+
 - PTY process must be killed in `onClose()` to avoid zombie shells
 - node-pty native addon must match Obsidian's Electron ABI — use `@lydell/node-pty` for better prebuild coverage
 

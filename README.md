@@ -9,7 +9,7 @@ Embedded terminal for [Obsidian](https://obsidian.md) — like IntelliJ IDEA's t
 - **Configurable shell** — zsh (default), bash, fish, or custom path via Settings Tab
 - **Auto-detection** — finds available shells on your system, prefers modern ones
 - **Multi-terminal** — up to 10 independent terminal tabs
-- **Clipboard** — `Ctrl+Shift+C` copy, `Ctrl+Shift+V` paste, right-click context menu
+- **Clipboard** — `Ctrl+V` paste, `Ctrl+C` copy (with selection), `Ctrl+Shift+C` copy, right-click paste
 - **Resize-aware** — terminal fits the pane, columns/rows synced to PTY
 - **Auto-focus** — terminal grabs focus on open
 - **Dark theme** — matches Obsidian's default look
@@ -57,7 +57,7 @@ Settings → Community Plugins → **Terminal** → Options (⚙️) → choose 
 | macOS (x64) | ✅ Tested | `@lydell/node-pty-darwin-x64` |
 | macOS (arm64) | ✅ Tested | `@lydell/node-pty-darwin-arm64` |
 | Linux (x64) | ✅ Tested (via Docker/claudocker) | `@lydell/node-pty-linux-x64` |
-| Windows | ⚠️ Untested | Requires ConPTY (Win 10 1809+). Volunteers welcome! |
+| Windows | ✅ Tested | ConPTY fallback via child_process |
 | Mobile (iOS/Android) | ❌ Unsupported | Requires Node.js native addon |
 
 The plugin is **desktop only** (`isDesktopOnly: true`). It uses [node-pty](https://github.com/lydell/node-pty) for pseudo-terminal support, which requires a native Node.js addon matching Obsidian's Electron ABI.
@@ -66,7 +66,7 @@ The plugin is **desktop only** (`isDesktopOnly: true`). It uses [node-pty](https
 
 - **Limited settings** — shell selection exists, but font size, theme, and scrollback are still hardcoded
 - **No theme sync** — terminal colors don't follow Obsidian's theme changes
-- **No hotkey customization** — `Ctrl+Shift+C`/`Ctrl+Shift+V` for clipboard are hardcoded
+- **No hotkey customization** — clipboard shortcuts are hardcoded
 - **No session persistence** — terminals are lost on Obsidian restart (tmux/screen integration planned)
 - **No tab completion** — Tab key is intercepted by Obsidian; autocomplete not yet implemented
 - **No sidebar mode** — terminal only opens as a bottom pane for now

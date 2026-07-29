@@ -105,22 +105,68 @@ export class TerminalView extends ItemView {
       this.pty?.write(data);
     });
 
+    const copySelection = () => {
+      const selection = this.term!.getSelection();
+      if (selection) {
+        navigator.clipboard.writeText(selection).catch(() => {
+          // navigator.clipboard may fail on some platforms;
+          // the selection remains in xterm.js for manual copy.
+        });
+      }
+    };
+
+    const pasteClipboard = () => {
+      navigator.clipboard.readText().then((text: string) => {
+        this.pty?.write(text);
+      }).catch(() => { /* clipboard read denied */ });
+    };
+
     this.term.attachCustomKeyEventHandler((e: KeyboardEvent): boolean => {
+      // Ctrl+Shift+C → copy (Mac/Linux standard)
       if (e.ctrlKey && e.shiftKey && e.key === "C") {
-        const selection = this.term!.getSelection();
-        if (selection) {
-          navigator.clipboard.writeText(selection);
+        copySelection();
+        return false;
+      }
+      // Ctrl+C with selection → copy.
+      // Without selection → SIGINT (ETX).
+      if (!e.shiftKey && e.ctrlKey && e.key === "c") {
+        const sel = this.term!.getSelection();
+        if (sel) {
+          copySelection();
+        } else {
+          this.pty?.write("\x03");
         }
         return false;
       }
-      if (e.ctrlKey && e.shiftKey && e.key === "V") {
-        navigator.clipboard.readText().then((text: string) => {
-          this.pty?.write(text);
-        });
+      // Ctrl+V → return false to prevent xterm.js from calling
+      // preventDefault() on the keydown.  If xterm.js prevented
+      // the default, the browser would NOT generate the paste
+      // event and our paste guard below would never fire.
+      // The actual paste happens in the textarea guard.
+      if (!e.shiftKey && e.ctrlKey && e.key === "v") {
         return false;
       }
       return true;
     });
+
+    // Block xterm.js native copy event.
+    this.term.element?.addEventListener("copy", (e: ClipboardEvent) => {
+      e.preventDefault();
+    });
+
+    // Handle paste synchronously from ClipboardEvent. Single code
+    // path — xterm.js never sees the event (stopImmediatePropagation).
+    const textarea = this.term.element?.querySelector("textarea");
+    if (textarea) {
+      textarea.addEventListener("paste", (e: ClipboardEvent) => {
+        const text = e.clipboardData?.getData("text/plain");
+        if (text) {
+          this.pty?.write(text);
+        }
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      }, { capture: true });
+    }
 
     this.term.element?.addEventListener("contextmenu", (e: MouseEvent) => {
       e.preventDefault();
