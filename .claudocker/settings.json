@@ -1,6 +1,7 @@
 {
   "mounts": [
-    "/Users/pavel/obsidian-test"
+    "/Users/pavel/obsidian-test",
+    "/Users/pavel/IdeaProjects/max-integration"
   ],
   "envFile": null,
   "flags": null,

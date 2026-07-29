@@ -3,6 +3,14 @@
   height: 100%;
   /* Override Obsidian .view-content { overflow: auto } */
   overflow: hidden !important;
+  /*
+   * Block browser DOM selection in the terminal.
+   * xterm.js uses its own SelectionManager (not browser selection),
+   * and getSelection() only returns text selected via xterm.js.
+   * If the browser creates its own selection (blue highlight),
+   * getSelection() returns empty — copy won't work.
+   */
+  user-select: none !important;
 }
 
 .terminal-view-content .terminal-container {

@@ -8,8 +8,8 @@ Usage: python3 scripts/cdp-eval.py '<javascript>'
 import sys, json, socket, base64, os, struct, time
 
 
-HOST = "192.168.65.254"
-PORT = 9222
+HOST = os.environ.get("CDP_HOST", "192.168.65.254")
+PORT = int(os.environ.get("CDP_PORT", "9222"))
 WS_TIMEOUT = 30  # seconds for JS execution
 
 
@@ -51,7 +51,8 @@ def ws_eval(expression: str, vault: str | None = None) -> dict:
         raise RuntimeError("No Obsidian page found. Is it running with --remote-debugging-port?")
 
     ws_url = pages[0]["webSocketDebuggerUrl"]
-    ws_path = "/" + ws_url.split("localhost/", 1)[1] if "localhost/" in ws_url else ws_url
+    # Extract path from ws://host:port/path → /path
+    ws_path = "/" + ws_url.split("/", 3)[3] if "://" in ws_url else ws_url
 
     # WebSocket handshake
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

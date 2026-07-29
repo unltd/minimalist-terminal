@@ -49,9 +49,6 @@ export class TerminalView extends ItemView {
 
     if (this.container) return;
 
-    // Pin the leaf so Obsidian does not open notes in the terminal tab group
-    this.leaf.setPinned(true);
-
     contentEl.empty();
     contentEl.classList.add("terminal-view-content");
 
@@ -93,6 +90,11 @@ export class TerminalView extends ItemView {
       vaultPath,
       terminalShell || process.env.SHELL || "bash",
     );
+
+    // PtyBridge constructor may fail synchronously on platforms without node-pty
+    // (e.g. Windows). If it calls onExit → leaf.detach() → onClose() → term=null,
+    // we must bail out before accessing this.term.
+    if (!this.term) return;
 
     this.term.onData((data: string) => {
       this.pty?.write(data);

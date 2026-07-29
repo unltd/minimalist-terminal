@@ -8,6 +8,7 @@ services:
     volumes:
       - ${PWD}:${PWD}
       - /Users/pavel/obsidian-test:/Users/pavel/obsidian-test
+      - /Users/pavel/IdeaProjects/max-integration:/Users/pavel/IdeaProjects/max-integration
       - ${HOME}/.claude:/home/dev/.claude
       - ${HOME}/.claude.json:/home/dev/.claude.json
       - ${HOME}/.claudocker/local:/home/dev/.claudocker-persist

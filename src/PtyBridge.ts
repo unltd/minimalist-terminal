@@ -29,10 +29,11 @@ export class PtyBridge {
       const ptyModule = require(ptyPath);
       spawn = ptyModule.spawn;
     } catch (e) {
+      const platformPkg = getPlatformPackage();
       this.callbacks.onData(
         `\r\n\x1b[31m[Terminal unavailable]\x1b[0m\r\n` +
           `node-pty not found.\r\n` +
-          `Install: npm install @lydell/node-pty-darwin-arm64\r\n` +
+          `Install: npm install ${platformPkg}\r\n` +
           `Error: ${(e as Error).message}\r\n\r\n`,
       );
       this.callbacks.onExit(-1);
@@ -153,6 +154,13 @@ export class PtyBridge {
     this.killFn = null;
     this.pty = null;
   }
+}
+
+/** Return the platform-specific @lydell/node-pty package name. */
+function getPlatformPackage(): string {
+  const plat = process.platform;   // "darwin", "linux", "win32"
+  const arch = process.arch;       // "arm64", "x64"
+  return `@lydell/node-pty-${plat}-${arch}`;
 }
 
 export interface PtyBridgeCallbacks {

@@ -7,9 +7,12 @@ import base64
 import os
 import struct
 
-HOST = "192.168.65.254"
-PORT = 9222
-OUTPUT_DIR = "/Users/pavel/IdeaProjects/obsidian-terminal/screenshots"
+HOST = os.environ.get("CDP_HOST", "192.168.65.254")
+PORT = int(os.environ.get("CDP_PORT", "9222"))
+OUTPUT_DIR = os.environ.get(
+    "CDP_SCREENSHOT_DIR",
+    "/Users/pavel/IdeaProjects/obsidian-terminal/screenshots",
+)
 
 
 def http_get(path: str) -> dict:
@@ -49,9 +52,9 @@ def ws_connect_and_exec(expression: str, vault: str | None = None) -> dict:
     if not pages:
         raise RuntimeError("No page targets found")
 
-    page = pages[0]
-    ws_path = page["webSocketDebuggerUrl"]
-    path = "/" + ws_path.split("localhost/", 1)[1] if "localhost/" in ws_path else ws_path
+    ws_path = pages[0]["webSocketDebuggerUrl"]
+    # Extract path from ws://host:port/path → /path
+    path = "/" + ws_path.split("/", 3)[3] if "://" in ws_path else ws_path
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(30)
