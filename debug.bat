@@ -3,28 +3,19 @@ setlocal enabledelayedexpansion
 title Obsidian CDP Debug
 
 :: ===========================================================================
-:: debug.bat — Single entry point for Obsidian CDP debugging on Windows
+:: debug.bat v8 — Pure batch, no PowerShell. One thing, done right.
 ::
-:: Usage:
-::   debug.bat <vault-path> [port]
-::   debug.bat C:\Users\tania\Documents\obsidian-test
-::   debug.bat C:\vault 9223
-::
-:: Does:
-::   1. Admin check (with auto-relaunch)
-::   2. Kill existing Obsidian
-::   3. Launch with --remote-debugging-port
-::   4. Wait for CDP (30s with progress dots)
-::   5. Setup firewall + portproxy
-::   6. Detect IP + show remote commands
-::   7. Self-test (optional)
-::
-:: Every step logged with [OK] / [FAIL] / [WARN].
+:: Usage:  debug.bat <vault-path> [port]
 :: ===========================================================================
 
 set VAULT=%~1
 set PORT=%~2
 if "%PORT%"=="" set PORT=9222
+
+:: ── Defaults ────────────────────────────────────────────────────────
+set CDP_READY=0
+set LOCAL_IP=UNKNOWN
+set PORT_PROXY_INFO=skipped
 
 if "%VAULT%"=="" (
     echo Usage: debug.bat ^<vault-path^> [port]
@@ -32,174 +23,154 @@ if "%VAULT%"=="" (
     exit /b 1
 )
 
-:: ── Validate vault path ─────────────────────────────────────────────
+if not exist "%VAULT%" mkdir "%VAULT%" 2>nul
 if not exist "%VAULT%" (
-    echo [WARN] Vault not found: %VAULT%
-    echo [INFO] Creating directory...
-    mkdir "%VAULT%" 2>nul
-    if errorlevel 1 (
-        echo [FAIL] Cannot create vault directory
-        pause
-        exit /b 1
-    )
-    echo [OK] Created vault directory
-)
-
-:: ── Self-elevate to admin ───────────────────────────────────────────
-net session >nul 2>&1
-if errorlevel 1 (
-    echo [WARN] Not running as Administrator.
-    echo [INFO] Firewall + portproxy need Admin rights.
-    echo [INFO] Relaunching as Administrator...
-    powershell -Command "Start-Process cmd -Verb RunAs -ArgumentList '/c cd /d %CD% && %~f0 %VAULT% %PORT%'" -WindowStyle Hidden
-    exit /b 0
-)
-echo [OK] Running as Administrator
-
-:: ══════════════════════════════════════════════════════════════════════
-echo.
-echo ========================================
-echo   Obsidian CDP Debug
-echo   Vault: %VAULT%
-echo   Port:  %PORT%
-echo ========================================
-
-:: ── Step 1: Kill Obsidian ───────────────────────────────────────────
-echo.
-echo [1/5] Stopping existing Obsidian...
-set KILLED=0
-tasklist /fi "imagename eq Obsidian.exe" 2>nul | find /i "Obsidian.exe" >nul
-if errorlevel 1 (
-    echo [OK] No Obsidian processes found
-) else (
-    echo [INFO] Obsidian running — killing...
-    taskkill /f /im Obsidian.exe >nul 2>&1
-    if errorlevel 1 (
-        echo [FAIL] Could not kill Obsidian
-    ) else (
-        echo [OK] Obsidian killed
-        set KILLED=1
-    )
-)
-
-if "%KILLED%"=="1" (
-    echo [INFO] Waiting 3s for cleanup...
-    timeout /t 3 /nobreak >nul
-)
-
-:: ── Step 2: Find Obsidian.exe ──────────────────────────────────────
-echo.
-echo [2/5] Locating Obsidian.exe...
-set OBSIDIAN=
-for %%p in (
-    "%LOCALAPPDATA%\Obsidian\Obsidian.exe"
-    "%LOCALAPPDATA%\obsidian\Obsidian.exe"
-    "%APPDATA%\Obsidian\Obsidian.exe"
-) do (
-    if exist %%p (
-        set OBSIDIAN=%%~p
-        echo [OK] Found: %%p
-        goto :obsidian_found
-    )
-)
-:obsidian_found
-if "%OBSIDIAN%"=="" (
-    echo [FAIL] Obsidian.exe not found
-    echo        Install from https://obsidian.md/download
+    echo [FAIL] Vault not found and cannot create: %VAULT%
     pause
     exit /b 1
 )
 
-:: ── Step 3: Launch Obsidian with CDP ────────────────────────────────
-echo.
-echo [3/5] Launching Obsidian with CDP...
-echo [INFO] Port: %PORT%
-echo [INFO] Vault: %VAULT%
+:: ── Admin ───────────────────────────────────────────────────────────
+net session >nul 2>&1
+if errorlevel 1 (
+    echo [INFO] Relaunching as Administrator...
+    powershell -Command "Start-Process cmd -Verb RunAs -ArgumentList '/c cd /d %CD% && %~f0 %VAULT% %PORT%'" -WindowStyle Hidden
+    exit /b 0
+)
+echo [OK] Admin
 
-:: Launch directly with start "" — Start-Process -WindowStyle Hidden suppresses CDP!
+:: ══════════════════════════════════════════════════════════════════════
+echo.
+echo ========================================
+echo   Obsidian CDP Debug v8
+echo   Vault: %VAULT%
+echo   Port:  %PORT%
+echo ========================================
+
+:: ── Step 1: Kill Obsidian + singleton lock ──────────────────────────
+echo.
+echo [1/6] Stopping Obsidian...
+set KILLED=0
+tasklist /fi "imagename eq Obsidian.exe" 2>nul | find /i "Obsidian.exe" >nul
+if errorlevel 1 (
+    echo [OK] Not running
+) else (
+    echo [INFO] Killing...
+    taskkill /f /im Obsidian.exe >nul 2>&1
+    set KILLED=1
+    echo [OK] Killed
+)
+
+:: Clear Electron singleton lock
+if exist "%APPDATA%\Obsidian\SingletonLock" del "%APPDATA%\Obsidian\SingletonLock" 2>nul
+if exist "%APPDATA%\obsidian\SingletonLock" del "%APPDATA%\obsidian\SingletonLock" 2>nul
+echo [OK] SingletonLock cleared
+
+if "%KILLED%"=="1" timeout /t 3 /nobreak >nul
+
+:: ── Step 2: Find Obsidian ───────────────────────────────────────────
+echo.
+echo [2/6] Finding Obsidian.exe...
+set OBSIDIAN=
+if exist "%LOCALAPPDATA%\Obsidian\Obsidian.exe" set "OBSIDIAN=%LOCALAPPDATA%\Obsidian\Obsidian.exe"
+if exist "%LOCALAPPDATA%\obsidian\Obsidian.exe" set "OBSIDIAN=%LOCALAPPDATA%\obsidian\Obsidian.exe"
+if "%OBSIDIAN%"=="" if exist "%APPDATA%\Obsidian\Obsidian.exe" set "OBSIDIAN=%APPDATA%\Obsidian\Obsidian.exe"
+if "%OBSIDIAN%"=="" (
+    echo [FAIL] Obsidian.exe not found
+    pause
+    exit /b 1
+)
+echo [OK] %OBSIDIAN%
+
+:: ── Step 3: Launch ──────────────────────────────────────────────────
+echo.
+echo [3/6] Launching with CDP...
 start "" "%OBSIDIAN%" --remote-debugging-port=%PORT% --remote-debugging-address=0.0.0.0 --remote-allow-origins=* "%VAULT%"
-echo [OK] Obsidian launched
+echo [OK] Launched
+
+:: Verify it's running
+set OBSIDIAN_RUNNING=no
+for /l %%i in (1,1,5) do (
+    timeout /t 1 /nobreak >nul
+    tasklist /fi "imagename eq Obsidian.exe" 2>nul | find /i "Obsidian.exe" >nul
+    if not errorlevel 1 (
+        set OBSIDIAN_RUNNING=yes
+        goto :obsidian_ok
+    )
+)
+:obsidian_ok
+if "%OBSIDIAN_RUNNING%"=="yes" (echo [OK] Obsidian.exe running) else (echo [WARN] Obsidian.exe not in tasklist)
 
 :: ── Step 4: Wait for CDP ────────────────────────────────────────────
 echo.
-echo [4/5] Waiting for CDP on 127.0.0.1:%PORT% ...
-set CDP_READY=0
-set PORT_PROXY_ADDED=0
-set CDP_BOUND_TO_LOCALHOST=1
-set CDP_BIND_INFO=unknown
-set PORT_PROXY_INFO=unknown
-for /l %%i in (1,1,15) do (
-    <nul set /p =.
-    curl -s http://127.0.0.1:%PORT%/json 2>nul >nul
-    if not !errorlevel! equ 0 (
-        timeout /t 1 /nobreak >nul
-    ) else (
-        set CDP_READY=1
-        echo.
-        echo [OK] CDP listening on 127.0.0.1:%PORT% ^(took %%is^)
-        goto :cdp_ready
-    )
-)
-:cdp_ready
+echo [4/6] Waiting for CDP on 127.0.0.1:%PORT% ...
+set CDP_ATTEMPT=0
 
-if "%CDP_READY%"=="0" (
-    echo.
-    echo [FAIL] CDP did not start within 30s
-    echo [INFO] Check manually:
-    echo        netstat -ano ^| findstr %PORT%
-    echo        curl http://127.0.0.1:%PORT%/json
-    echo [INFO] Network setup will continue anyway...
-) else (
-    :: Quick verify — show targets
-    for /f "delims=" %%t in ('curl -s http://127.0.0.1:%PORT%/json 2^>nul') do (
-        echo [INFO] CDP response received ^(%%t bytes^)
-        goto :cdp_verified
-    )
-    :cdp_verified
-)
+:cdp_poll
+set /a CDP_ATTEMPT+=1
+<nul set /p =.
+curl -s http://127.0.0.1:%PORT%/json 2>nul >nul
+if not errorlevel 1 goto :cdp_ok
+if %CDP_ATTEMPT% GEQ 20 goto :cdp_fail
+timeout /t 2 /nobreak >nul
+goto :cdp_poll
 
-:: ── Step 5: Network setup ───────────────────────────────────────────
+:cdp_ok
+set CDP_READY=1
 echo.
-echo [5/5] Network setup...
+echo [OK] CDP responding on 127.0.0.1:%PORT% (took ~%CDP_ATTEMPT%x2s)
 
-:: Detect local IP
-set LOCAL_IP=UNKNOWN
-for /f "tokens=*" %%a in ('powershell -NoProfile -ExecutionPolicy Bypass -Command "(Get-NetIPAddress -AddressFamily IPv4 | Where-Object { \$_.IPAddress -notmatch '^127|^169' } | Select-Object -First 1).IPAddress" 2^>nul') do (
-    if not "%%a"=="" set LOCAL_IP=%%a
+:: Quick CDP test — show targets
+for /f "tokens=*" %%t in ('curl -s http://127.0.0.1:%PORT%/json 2^>nul') do (
+    echo [INFO] CDP response: %%t
+    goto :cdp_done
 )
-if "%LOCAL_IP%"=="UNKNOWN" (
-    for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*" 2^>nul') do (
-        if "!LOCAL_IP!"=="UNKNOWN" (
-            for /f "tokens=1" %%b in ("%%a") do (
-                set IP=%%b
-                set IP=!IP: =!
-                echo !IP! | findstr /B "127. 169.254." >nul
-                if errorlevel 1 set LOCAL_IP=!IP!
-            )
-        )
-    )
+goto :cdp_done
+
+:cdp_fail
+echo.
+echo [FAIL] CDP not responding after 40s
+echo [INFO] Check: curl http://127.0.0.1:%PORT%/json
+echo [INFO] Check: netstat -ano ^| findstr %PORT%
+
+:cdp_done
+
+:: ── Step 5: Network ─────────────────────────────────────────────────
+echo.
+echo [5/6] Network setup...
+
+:: Detect IP — pure ipconfig, no PowerShell
+for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*" 2^>nul') do (
+    if "!LOCAL_IP!"=="UNKNOWN" call :try_ip "%%a"
 )
 echo [INFO] Local IP: %LOCAL_IP%
 
-:: Check where CDP is listening (127.0.0.1 vs 0.0.0.0)
-netstat -ano | findstr ":%PORT% " | findstr "0.0.0.0:%PORT%" >nul 2>&1
-if not errorlevel 1 set CDP_BOUND_TO_LOCALHOST=0
+:: Check CDP bind
+set CDP_BIND=unknown
+if "%CDP_READY%"=="1" (
+    set CDP_BIND=127.0.0.1:%PORT% (localhost)
+    netstat -ano | findstr ":%PORT% " | findstr "0.0.0.0:%PORT%" >nul 2>&1
+    if not errorlevel 1 set "CDP_BIND=0.0.0.0:%PORT% (all interfaces)"
+    echo [INFO] CDP bind: !CDP_BIND!
+)
 
-if "%CDP_BOUND_TO_LOCALHOST%"=="0" (
-    echo [INFO] CDP listening on 0.0.0.0:%PORT% — already accessible from network
-    echo [INFO] Port proxy NOT needed ^(--remote-debugging-address=0.0.0.0 is working^)
-    set PORT_PROXY_ADDED=0
-) else (
-    echo [INFO] CDP listening on 127.0.0.1:%PORT% only — needs port proxy for remote access
-    :: Port proxy
-    netsh interface portproxy delete v4tov4 listenport=%PORT% listenaddress=0.0.0.0 >nul 2>&1
-    netsh interface portproxy add v4tov4 listenport=%PORT% listenaddress=0.0.0.0 connectport=%PORT% connectaddress=127.0.0.1 >nul 2>&1
+:: Port proxy — only if CDP on localhost
+if "%CDP_READY%"=="1" (
+    netstat -ano | findstr ":%PORT% " | findstr "0.0.0.0:%PORT%" >nul 2>&1
     if errorlevel 1 (
-        echo [WARN] Could not add port proxy
-        set PORT_PROXY_ADDED=0
+        echo [INFO] Adding port proxy...
+        netsh interface portproxy delete v4tov4 listenport=%PORT% listenaddress=0.0.0.0 >nul 2>&1
+        netsh interface portproxy add v4tov4 listenport=%PORT% listenaddress=0.0.0.0 connectport=%PORT% connectaddress=127.0.0.1 >nul 2>&1
+        if errorlevel 1 (
+            echo [WARN] Port proxy FAILED
+            set PORT_PROXY_INFO=FAILED
+        ) else (
+            echo [OK] Port proxy: 0.0.0.0:%PORT% -^> 127.0.0.1:%PORT%
+            set PORT_PROXY_INFO=active
+        )
     ) else (
-        echo [OK] Port proxy added: 0.0.0.0:%PORT% -^> 127.0.0.1:%PORT%
-        set PORT_PROXY_ADDED=1
+        echo [OK] CDP on 0.0.0.0 — no proxy needed
+        set PORT_PROXY_INFO=not needed
     )
 )
 
@@ -207,94 +178,63 @@ if "%CDP_BOUND_TO_LOCALHOST%"=="0" (
 netsh advfirewall firewall delete rule name="Obsidian CDP" >nul 2>&1
 netsh advfirewall firewall add rule name="Obsidian CDP" dir=in action=allow protocol=TCP localport=%PORT% >nul 2>&1
 if errorlevel 1 (
-    echo [WARN] Could not add firewall rule ^(try running as Administrator^)
+    echo [WARN] Firewall rule may have failed
 ) else (
-    echo [OK] Firewall rule added for port %PORT%
-)
-
-:: ── Summary variables ───────────────────────────────────────────────
-if "%CDP_READY%"=="1" (
-    if "%CDP_BOUND_TO_LOCALHOST%"=="0" (
-        set CDP_BIND_INFO=0.0.0.0:%PORT% ^(all interfaces^)
-        set PORT_PROXY_INFO=not needed
-    ) else (
-        set CDP_BIND_INFO=127.0.0.1:%PORT% ^(localhost^)
-        if "%PORT_PROXY_ADDED%"=="1" (
-            set PORT_PROXY_INFO=active ^(0.0.0.0-^>127.0.0.1^)
-        ) else (
-            set PORT_PROXY_INFO=FAILED
-        )
-    )
-) else (
-    set CDP_BIND_INFO=not listening
-    set PORT_PROXY_INFO=N/A
-)
-
-:: Verify port
-netstat -ano | findstr ":%PORT% " >nul 2>&1
-if errorlevel 1 (
-    echo [WARN] Port %PORT% not in netstat ^(may be normal with portproxy^)
-) else (
-    echo [OK] Port %PORT% confirmed in netstat
+    echo [OK] Firewall: port %PORT% allowed
 )
 
 :: ══════════════════════════════════════════════════════════════════════
 echo.
-echo ============================================
-echo   Obsidian CDP — READY
-echo ============================================
-echo   Vault:     %VAULT%
-echo   Port:      %PORT%
-echo   CDP:       %CDP_BIND_INFO%
-echo   This PC:   %LOCAL_IP%
-echo   PortProxy: %PORT_PROXY_INFO%
-echo   Firewall:  added
-echo ============================================
-echo.
-echo Remote dev machine:
-echo   CDP_HOST=%LOCAL_IP% python3 debug.py test
-echo   CDP_HOST=%LOCAL_IP% python3 debug.py screenshot
-echo   CDP_HOST=%LOCAL_IP% python3 debug.py eval "js"
-echo.
-echo Local test:
-echo   python3 debug.py test --local
-echo.
-echo Press Ctrl+C or close this window to stop Obsidian.
-echo ^(firewall + portproxy auto-removed on exit^)
-echo.
+echo ========================================
+echo   SUMMARY
+echo ========================================
+echo   Vault:      %VAULT%
+echo   Port:       %PORT%
+echo   Obsidian:   %OBSIDIAN_RUNNING%
+echo   CDP ready:  %CDP_READY%
+echo   CDP bind:   %CDP_BIND%
+echo   Local IP:   %LOCAL_IP%
+echo   PortProxy:  %PORT_PROXY_INFO%
+echo ========================================
 
-:: ── Self-test ───────────────────────────────────────────────────────
 if "%CDP_READY%"=="1" (
-    echo Running quick self-test...
     echo.
-
-    :: Use PowerShell to do a proper CDP query
-    powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-        "$r = Invoke-WebRequest -Uri 'http://127.0.0.1:%PORT%/json' -UseBasicParsing; " ^
-        "$t = $r.Content | ConvertFrom-Json; " ^
-        "$p = $t | Where-Object { \$_.type -eq 'page' }; " ^
-        "Write-Host '  [OK] Found' \$p.Count 'Obsidian page(s)'; " ^
-        "foreach (\$pg in \$p) { Write-Host '       Title:' \$pg.title }"
-
-    if errorlevel 1 (
-        echo   [WARN] Self-test failed — CDP may still be starting
-    )
+    echo Remote dev machine:
+    echo   CDP_HOST=%LOCAL_IP% python3 debug.py test
+    echo   CDP_HOST=%LOCAL_IP% python3 debug.py screenshot
+    echo.
+    echo Local:
+    echo   python3 debug.py test --local
+)
+if "%CDP_READY%"=="0" (
+    echo.
+    echo [!!] CDP FAILED
+    echo   1. Kill all Obsidian from Task Manager
+    echo   2. Delete %%APPDATA%%\Obsidian\SingletonLock
+    echo   3. Run manually: "%OBSIDIAN%" --remote-debugging-port=%PORT% --remote-debugging-address=0.0.0.0 "%VAULT%"
+    echo   4. Check: curl http://127.0.0.1:%PORT%/json
 )
 
-:: ── Wait & cleanup ──────────────────────────────────────────────────
 echo.
-echo Obsidian is running. Close this window to stop and cleanup.
+echo Close this window to cleanup and stop.
 pause >nul
 
+:: ── Cleanup ─────────────────────────────────────────────────────────
 echo.
 echo Cleaning up...
 netsh interface portproxy delete v4tov4 listenport=%PORT% listenaddress=0.0.0.0 >nul 2>&1
 netsh advfirewall firewall delete rule name="Obsidian CDP" >nul 2>&1
-echo [OK] Firewall + portproxy removed.
-echo.
-choice /c yn /m "Kill Obsidian"
-if errorlevel 2 goto :no_kill
+echo [OK] PortProxy + Firewall removed.
+choice /c yn /m "Kill Obsidian?"
+if errorlevel 2 goto :eof
 taskkill /f /im Obsidian.exe >nul 2>&1
-echo [OK] Obsidian stopped.
-:no_kill
-endlocal
+echo [OK] Stopped.
+goto :eof
+
+:: ── Subroutine: try_ip ──────────────────────────────────────────────
+:try_ip
+set IP=%~1
+set IP=%IP: =%
+echo %IP% | findstr /B "127. 169.254." >nul
+if errorlevel 1 set LOCAL_IP=%IP%
+goto :eof
