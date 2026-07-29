@@ -3,14 +3,37 @@ setlocal enabledelayedexpansion
 title Obsidian CDP Debug
 
 :: ===========================================================================
-:: debug.bat v8 — Pure batch, no PowerShell. One thing, done right.
+:: debug.bat v9 — Local + remote modes, CDP connection limit warning
 ::
-:: Usage:  debug.bat <vault-path> [port]
+:: Usage:  debug.bat <vault-path> [port] [/local] [/nowait]
+::   /local  — skip admin, firewall, portproxy (localhost-only)
+::   /nowait — don't pause at end
 :: ===========================================================================
 
-set VAULT=%~1
-set PORT=%~2
-if "%PORT%"=="" set PORT=9222
+set VAULT=
+set PORT=9222
+set MODE=remote
+set NOWAIT=0
+
+:: ── Parse args ────────────────────────────────────────────────────────
+for %%a in (%*) do (
+    if /i "%%a"=="/local"   set MODE=local
+    if /i "%%a"=="--local"  set MODE=local
+    if /i "%%a"=="/nowait"  set NOWAIT=1
+    if /i "%%a"=="--nowait" set NOWAIT=1
+)
+:: Vault = first non-flag arg, Port = second non-flag arg
+for %%a in (%*) do (
+    if not defined VAULT (
+        if /i not "%%a"=="/local" if /i not "%%a"=="--local" if /i not "%%a"=="/nowait" if /i not "%%a"=="--nowait" (
+            set "VAULT=%%a"
+        )
+    ) else (
+        if /i not "%%a"=="/local" if /i not "%%a"=="--local" if /i not "%%a"=="/nowait" if /i not "%%a"=="--nowait" (
+            set "PORT=%%a"
+        )
+    )
+)
 
 :: ── Defaults ────────────────────────────────────────────────────────
 set CDP_READY=0
@@ -31,13 +54,17 @@ if not exist "%VAULT%" (
 )
 
 :: ── Admin ───────────────────────────────────────────────────────────
-net session >nul 2>&1
-if errorlevel 1 (
-    echo [INFO] Relaunching as Administrator...
-    powershell -Command "Start-Process cmd -Verb RunAs -ArgumentList '/c cd /d %CD% && %~f0 %VAULT% %PORT%'" -WindowStyle Hidden
-    exit /b 0
+if "%MODE%"=="local" (
+    echo [OK] Local mode — skipping admin elevation
+) else (
+    net session >nul 2>&1
+    if errorlevel 1 (
+        echo [INFO] Relaunching as Administrator...
+        powershell -Command "Start-Process cmd -Verb RunAs -ArgumentList '/c cd /d %CD% && %~f0 %VAULT% %PORT%'" -WindowStyle Hidden
+        exit /b 0
+    )
+    echo [OK] Admin
 )
-echo [OK] Admin
 
 :: ══════════════════════════════════════════════════════════════════════
 echo.
@@ -84,8 +111,12 @@ echo [OK] %OBSIDIAN%
 
 :: ── Step 3: Launch ──────────────────────────────────────────────────
 echo.
-echo [3/6] Launching with CDP...
-start "" "%OBSIDIAN%" --remote-debugging-port=%PORT% --remote-debugging-address=0.0.0.0 --remote-allow-origins=* "%VAULT%"
+echo [3/6] Launching with CDP (%MODE% mode)...
+if "%MODE%"=="local" (
+    start "" "%OBSIDIAN%" --remote-debugging-port=%PORT% "%VAULT%"
+) else (
+    start "" "%OBSIDIAN%" --remote-debugging-port=%PORT% --remote-debugging-address=0.0.0.0 --remote-allow-origins=* "%VAULT%"
+)
 echo [OK] Launched
 
 :: Verify it's running
@@ -137,6 +168,10 @@ echo [INFO] Check: netstat -ano ^| findstr %PORT%
 
 :: ── Step 5: Network ─────────────────────────────────────────────────
 echo.
+if "%MODE%"=="local" (
+    echo [5/6] Network setup... skipped ^(local mode^)
+    goto :skip_network
+)
 echo [5/6] Network setup...
 
 :: Detect IP — pure ipconfig, no PowerShell
@@ -183,6 +218,7 @@ if errorlevel 1 (
     echo [OK] Firewall: port %PORT% allowed
 )
 
+:skip_network
 :: ══════════════════════════════════════════════════════════════════════
 echo.
 echo ========================================
@@ -190,6 +226,7 @@ echo   SUMMARY
 echo ========================================
 echo   Vault:      %VAULT%
 echo   Port:       %PORT%
+echo   Mode:       %MODE%
 echo   Obsidian:   %OBSIDIAN_RUNNING%
 echo   CDP ready:  %CDP_READY%
 echo   CDP bind:   %CDP_BIND%
@@ -216,15 +253,22 @@ if "%CDP_READY%"=="0" (
 )
 
 echo.
+echo   [!] CDP connection limit: after 5-10 debug.py eval calls,
+echo       WebSocket connections accumulate and new ones stop responding.
+echo       If CDP hangs: close this window, restart Obsidian.
+echo.
 echo Close this window to cleanup and stop.
+if "%NOWAIT%"=="1" goto :cleanup
 pause >nul
 
 :: ── Cleanup ─────────────────────────────────────────────────────────
+:cleanup
 echo.
 echo Cleaning up...
 netsh interface portproxy delete v4tov4 listenport=%PORT% listenaddress=0.0.0.0 >nul 2>&1
 netsh advfirewall firewall delete rule name="Obsidian CDP" >nul 2>&1
 echo [OK] PortProxy + Firewall removed.
+if "%NOWAIT%"=="1" goto :eof
 choice /c yn /m "Kill Obsidian?"
 if errorlevel 2 goto :eof
 taskkill /f /im Obsidian.exe >nul 2>&1
