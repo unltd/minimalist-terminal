@@ -116,23 +116,17 @@ echo [3/5] Launching Obsidian with CDP...
 echo [INFO] Port: %PORT%
 echo [INFO] Vault: %VAULT%
 
-:: Use PowerShell Start-Process with output redirected (prevents Obsidian
-:: console output from breaking the batch parser)
-powershell -Command "$p = Start-Process -FilePath '%OBSIDIAN%' -ArgumentList '--remote-debugging-port=%PORT%','--remote-allow-origins=*','%VAULT%' -PassThru -WindowStyle Hidden; Write-Output $p.Id"
-if errorlevel 1 (
-    echo [FAIL] Could not launch Obsidian
-    pause
-    exit /b 1
-)
+:: Launch directly with start "" — Start-Process -WindowStyle Hidden suppresses CDP!
+start "" "%OBSIDIAN%" --remote-debugging-port=%PORT% --remote-allow-origins=* "%VAULT%"
 echo [OK] Obsidian launched
 
 :: ── Step 4: Wait for CDP ────────────────────────────────────────────
 echo.
 echo [4/5] Waiting for CDP on 127.0.0.1:%PORT% ...
 set CDP_READY=0
-for /l %%i in (1,1,30) do (
+for /l %%i in (1,1,15) do (
     <nul set /p =.
-    curl -s http://127.0.0.1:9222/json 2^>nul >nul
+    curl -s http://127.0.0.1:%PORT%/json 2>nul >nul
     if not !errorlevel! equ 0 (
         timeout /t 1 /nobreak >nul
     ) else (
