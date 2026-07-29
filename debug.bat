@@ -124,6 +124,10 @@ echo [OK] Obsidian launched
 echo.
 echo [4/5] Waiting for CDP on 127.0.0.1:%PORT% ...
 set CDP_READY=0
+set PORT_PROXY_ADDED=0
+set CDP_BOUND_TO_LOCALHOST=1
+set CDP_BIND_INFO=unknown
+set PORT_PROXY_INFO=unknown
 for /l %%i in (1,1,15) do (
     <nul set /p =.
     curl -s http://127.0.0.1:%PORT%/json 2>nul >nul
@@ -158,7 +162,7 @@ if "%CDP_READY%"=="0" (
 echo.
 echo [5/5] Network setup...
 
-:: Detect IP
+:: Detect local IP
 set LOCAL_IP=UNKNOWN
 for /f "tokens=*" %%a in ('powershell -NoProfile -ExecutionPolicy Bypass -Command "(Get-NetIPAddress -AddressFamily IPv4 | Where-Object { \$_.IPAddress -notmatch '^127|^169' } | Select-Object -First 1).IPAddress" 2^>nul') do (
     if not "%%a"=="" set LOCAL_IP=%%a
@@ -175,23 +179,55 @@ if "%LOCAL_IP%"=="UNKNOWN" (
         )
     )
 )
+echo [INFO] Local IP: %LOCAL_IP%
+
+:: Check where CDP is listening (127.0.0.1 vs 0.0.0.0)
+netstat -ano | findstr ":%PORT% " | findstr "0.0.0.0:%PORT%" >nul 2>&1
+if not errorlevel 1 set CDP_BOUND_TO_LOCALHOST=0
+
+if "%CDP_BOUND_TO_LOCALHOST%"=="0" (
+    echo [INFO] CDP listening on 0.0.0.0:%PORT% — already accessible from network
+    echo [INFO] Port proxy NOT needed ^(--remote-debugging-address=0.0.0.0 is working^)
+    set PORT_PROXY_ADDED=0
+) else (
+    echo [INFO] CDP listening on 127.0.0.1:%PORT% only — needs port proxy for remote access
+    :: Port proxy
+    netsh interface portproxy delete v4tov4 listenport=%PORT% listenaddress=0.0.0.0 >nul 2>&1
+    netsh interface portproxy add v4tov4 listenport=%PORT% listenaddress=0.0.0.0 connectport=%PORT% connectaddress=127.0.0.1 >nul 2>&1
+    if errorlevel 1 (
+        echo [WARN] Could not add port proxy
+        set PORT_PROXY_ADDED=0
+    ) else (
+        echo [OK] Port proxy added: 0.0.0.0:%PORT% -^> 127.0.0.1:%PORT%
+        set PORT_PROXY_ADDED=1
+    )
+)
 
 :: Firewall
 netsh advfirewall firewall delete rule name="Obsidian CDP" >nul 2>&1
 netsh advfirewall firewall add rule name="Obsidian CDP" dir=in action=allow protocol=TCP localport=%PORT% >nul 2>&1
 if errorlevel 1 (
-    echo [WARN] Could not add firewall rule
+    echo [WARN] Could not add firewall rule ^(try running as Administrator^)
 ) else (
     echo [OK] Firewall rule added for port %PORT%
 )
 
-:: Port proxy
-netsh interface portproxy delete v4tov4 listenport=%PORT% listenaddress=0.0.0.0 >nul 2>&1
-netsh interface portproxy add v4tov4 listenport=%PORT% listenaddress=0.0.0.0 connectport=%PORT% connectaddress=127.0.0.1 >nul 2>&1
-if errorlevel 1 (
-    echo [WARN] Could not add port proxy
+:: ── Summary variables ───────────────────────────────────────────────
+if "%CDP_READY%"=="1" (
+    if "%CDP_BOUND_TO_LOCALHOST%"=="0" (
+        set CDP_BIND_INFO=0.0.0.0:%PORT% ^(all interfaces^)
+        set PORT_PROXY_INFO=not needed
+    ) else (
+        set CDP_BIND_INFO=127.0.0.1:%PORT% ^(localhost^)
+        if "%PORT_PROXY_ADDED%"=="1" (
+            set PORT_PROXY_INFO=active ^(0.0.0.0-^>127.0.0.1^)
+        ) else (
+            set PORT_PROXY_INFO=FAILED
+        )
+    )
 ) else (
-    echo [OK] Port proxy: 0.0.0.0:%PORT% -^> 127.0.0.1:%PORT%
+    set CDP_BIND_INFO=not listening
+    set PORT_PROXY_INFO=N/A
 )
 
 :: Verify port
@@ -207,10 +243,12 @@ echo.
 echo ============================================
 echo   Obsidian CDP — READY
 echo ============================================
-echo   Vault:    %VAULT%
-echo   Port:     %PORT%
-echo   CDP:      %CDP_READY% (1=online, 0=waiting)
-echo   This PC:  %LOCAL_IP%
+echo   Vault:     %VAULT%
+echo   Port:      %PORT%
+echo   CDP:       %CDP_BIND_INFO%
+echo   This PC:   %LOCAL_IP%
+echo   PortProxy: %PORT_PROXY_INFO%
+echo   Firewall:  added
 echo ============================================
 echo.
 echo Remote dev machine:
