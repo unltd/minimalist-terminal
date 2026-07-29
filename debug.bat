@@ -117,7 +117,7 @@ echo [INFO] Port: %PORT%
 echo [INFO] Vault: %VAULT%
 
 :: Launch directly with start "" — Start-Process -WindowStyle Hidden suppresses CDP!
-start "" "%OBSIDIAN%" --remote-debugging-port=%PORT% --remote-allow-origins=* "%VAULT%"
+start "" "%OBSIDIAN%" --remote-debugging-port=%PORT% --remote-debugging-address=0.0.0.0 --remote-allow-origins=* "%VAULT%"
 echo [OK] Obsidian launched
 
 :: ── Step 4: Wait for CDP ────────────────────────────────────────────
