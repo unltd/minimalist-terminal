@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] — 2026-07-31
+
+### Added
+- Windows support (basic ConPTY) — shell detection, PowerShell/CMD/WSL
+- Clipboard: Cmd+C/V (Mac), Ctrl+Shift+C fallback, right-click paste
+- Terminal.app Pro color theme (background #1e1e1e)
+- CI: GitHub Actions — build + typecheck on `ubuntu-latest` (Node 18/20/22)
+- CONTRIBUTING.md, CHANGELOG.md, `.env.example`
+- Build/run/test/lint/deploy scripts + Makefile
+- Dockerfile + `.dockerignore` (dev image)
+- `.gitattributes` (`* text=auto`)
+- Architecture diagram in README (Mermaid)
+- Icon: `terminal` (Lucide)
+
+### Changed
+- Shell: zsh default with auto-detection (was hardcoded bash)
+- Terminal tabs: no longer pinned (easy to close/reopen)
+- docs/ → autodocs/ (internal dev docs separated from public docs)
+- `.gitignore`: expanded patterns (IDE files, OS junk)
+- Platform matrix: macOS primary dev, Windows basic, Linux untested
+
+### Fixed
+- Hardcoded paths removed from `findNodePty()` — uses vault basePath
+- `.env` token replaced with placeholder
+- `PtyBridge` crash guard on constructor failure (missing node-pty on Windows)
+- Leaf no longer detached on shell exit — terminal stays visible with exit message
+
 ## [0.1.4] — 2026-07-27
 
 ### Added
@@ -35,4 +62,4 @@ All notable changes to this project will be documented in this file.
 - Clipboard (Ctrl+Shift+C/V, right-click context menu)
 - Auto-focus on open
 - Configurable shell path
-- Platform support: macOS (x64, arm64), Linux (x64)
+- Platform support: macOS (x64, arm64)

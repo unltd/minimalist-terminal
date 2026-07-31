@@ -3,7 +3,6 @@ import { Plugin, WorkspaceLeaf, addIcon } from "obsidian";
 import {
   TerminalView,
   VIEW_TYPE_TERMINAL,
-  MAX_TERMINALS,
   resetTerminalCounter,
   setTerminalShell,
 } from "./TerminalView";
@@ -96,10 +95,6 @@ export default class TerminalPlugin extends Plugin {
     const { workspace } = this.app;
 
     const existing = workspace.getLeavesOfType(VIEW_TYPE_TERMINAL);
-    if (existing.length >= MAX_TERMINALS) {
-      workspace.revealLeaf(existing[existing.length - 1]);
-      return;
-    }
 
     let leaf: WorkspaceLeaf;
     if (existing.length > 0) {

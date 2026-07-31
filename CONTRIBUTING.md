@@ -32,6 +32,6 @@ For CDP-based browser testing (Gauge + pytest), see [CLAUDE.md](CLAUDE.md).
 ## PR checklist
 
 - [ ] Code compiles with `npm run build`
-- [ ] Tested in Obsidian (macOS or Linux via Docker)
+- [ ] Tested in Obsidian on macOS
 - [ ] CSS changes don't break xterm.js rendering
 - [ ] New dependencies are minimal and justified

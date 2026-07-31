@@ -18,3 +18,6 @@ __pycache__/
 screenshots/
 build/
 *.zip
+.claudocker/
+.claude/settings.local.json
+.gauge/

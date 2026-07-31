@@ -1,7 +1,7 @@
 {
   "name": "obsidian-terminal",
-  "version": "0.1.4",
-  "description": "Embedded terminal for Obsidian — like IntelliJ IDEA's terminal",
+  "version": "0.2.0",
+  "description": "Embedded terminal for Obsidian — run CLI tools, use AI agents right inside your vault",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
@@ -26,8 +26,6 @@
     "@lydell/node-pty": "^1.2.0-beta.14",
     "@lydell/node-pty-darwin-arm64": "^1.2.0-beta.14",
     "@lydell/node-pty-darwin-x64": "^1.2.0-beta.14",
-    "@lydell/node-pty-linux-x64": "^1.2.0-beta.14",
-    "@lydell/node-pty-linux-arm64": "^1.2.0-beta.14",
     "@lydell/node-pty-win32-x64": "^1.2.0-beta.14",
     "@lydell/node-pty-win32-arm64": "^1.2.0-beta.14",
     "@xterm/addon-canvas": "^0.7.0",

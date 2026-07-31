@@ -4,7 +4,6 @@ import { FitAddon } from "@xterm/addon-fit";
 import { PtyBridge } from "./PtyBridge";
 
 export const VIEW_TYPE_TERMINAL = "obsidian-terminal-view";
-export const MAX_TERMINALS = 10;
 
 /** Shell path, set by the plugin from user settings before opening views. */
 export let terminalShell: string = "";
@@ -122,7 +121,7 @@ export class TerminalView extends ItemView {
     };
 
     this.term.attachCustomKeyEventHandler((e: KeyboardEvent): boolean => {
-      // Ctrl+Shift+C → copy (Mac/Linux standard)
+      // Ctrl+Shift+C → copy (macOS standard)
       if (e.ctrlKey && e.shiftKey && e.key === "C") {
         copySelection();
         return false;
