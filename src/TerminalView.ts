@@ -104,6 +104,35 @@ export class TerminalView extends ItemView {
       this.pty?.write(data);
     });
 
+    // OSC 52 clipboard support. Terminal programs (tmux, Neovim, etc.)
+    // send OSC 52 escape sequences to write to the system clipboard.
+    // Format: OSC 52 ; Pc ; <base64-data> ST
+    // Pc = 'c' for system clipboard (what we want).
+    // This is the only reliable clipboard channel from a remote/VPS
+    // tmux to the local macOS clipboard — pbcopy doesn't exist on Linux.
+    this.term.parser.registerOscHandler(52, (data: string): boolean => {
+      // data is the payload between OSC 52 ; and ST, e.g. "c;<base64>"
+      const colonIdx = data.indexOf(";");
+      if (colonIdx === -1) return false;
+
+      const selector = data.slice(0, colonIdx);
+      // Only handle system clipboard ('c') and unspecific (empty)
+      if (selector !== "c" && selector !== "") return false;
+
+      const b64 = data.slice(colonIdx + 1);
+      if (!b64) return false;
+
+      try {
+        const text = atob(b64);
+        navigator.clipboard.writeText(text).catch(() => {
+          // OSC 52 is fire-and-forget — no ACK to terminal program
+        });
+      } catch {
+        // Invalid base64 — ignore
+      }
+      return true; // Handled
+    });
+
     const copySelection = () => {
       const selection = this.term!.getSelection();
       if (selection) {
