@@ -121,20 +121,27 @@ export class TerminalView extends ItemView {
     };
 
     this.term.attachCustomKeyEventHandler((e: KeyboardEvent): boolean => {
-      // Ctrl+Shift+C → copy (macOS standard)
+      // Ctrl+Shift+C → copy.
+      // This shortcut does NOT trigger a browser "copy" event,
+      // so we write to clipboard directly via the async API.
       if (e.ctrlKey && e.shiftKey && e.key === "C") {
         copySelection();
         return false;
       }
-      // Ctrl+C with selection → copy.
-      // Without selection → SIGINT (ETX).
+      // Ctrl+C with selection → copy (let browser fire "copy" event).
+      // Ctrl+C without selection → SIGINT (ETX).
       if (!e.shiftKey && e.ctrlKey && e.key === "c") {
-        const sel = this.term!.getSelection();
-        if (sel) {
-          copySelection();
-        } else {
+        if (!this.term!.getSelection()) {
           this.pty?.write("\x03");
         }
+        // Either way, return false. With selection the browser
+        // fires a "copy" event and our handler below sets the
+        // clipboard synchronously via e.clipboardData.
+        return false;
+      }
+      // Cmd+C (macOS standard copy). Let the browser fire
+      // "copy" event → our handler below sets clipboard.
+      if (e.metaKey && !e.shiftKey && e.key === "c") {
         return false;
       }
       // Ctrl+V → return false to prevent xterm.js from calling
@@ -148,9 +155,17 @@ export class TerminalView extends ItemView {
       return true;
     });
 
-    // Block xterm.js native copy event.
+    // Handle copy event — write xterm.js selection to clipboard.
+    // Catches Ctrl+C (selection), Cmd+C, Edit→Copy, and any other
+    // browser-initiated copy action. Uses the synchronous
+    // e.clipboardData API which is more reliable in Electron than
+    // navigator.clipboard.writeText().
     this.term.element?.addEventListener("copy", (e: ClipboardEvent) => {
-      e.preventDefault();
+      const selection = this.term!.getSelection();
+      if (selection) {
+        e.clipboardData?.setData("text/plain", selection);
+      }
+      e.preventDefault(); // Use our data, not the browser's DOM selection
     });
 
     // Handle paste synchronously from ClipboardEvent. Single code
