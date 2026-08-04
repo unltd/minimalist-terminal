@@ -1,6 +1,6 @@
 # Minimalist Terminal
 
-Embedded terminal for [Obsidian](https://obsidian.md) — run CLI tools, use AI agents right inside your vault.
+Embed a real terminal in [Obsidian](https://obsidian.md) to run CLI tools and AI agents inside your vault.
 
 [![Version](https://img.shields.io/github/v/release/unltd/minimalist-terminal)](https://github.com/unltd/minimalist-terminal/releases)
 [![License](https://img.shields.io/github/license/unltd/minimalist-terminal)](LICENSE)

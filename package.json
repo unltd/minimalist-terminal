@@ -1,7 +1,7 @@
 {
   "name": "minimalist-terminal",
   "version": "0.3.0",
-  "description": "Embedded terminal for Obsidian — run CLI tools, use AI agents right inside your vault",
+  "description": "Embed a real terminal in Obsidian to run CLI tools and AI agents inside your vault.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
