@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - `SECURITY.md` — security policy (private vulnerability reporting)
 
 ### Changed
+- Rebranded to **Minimalist Terminal** — plugin id `minimalist-terminal` (the names "Terminal" and "embedded-terminal" were already taken in the Obsidian community catalog)
 - Clipboard paste: single code path via synchronous `ClipboardEvent` handler — no double paste
 - Platform dependencies moved to `optionalDependencies`, OS matrix (ubuntu/macos/windows × Node 22) in CI
 
