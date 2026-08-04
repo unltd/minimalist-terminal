@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Removed
+- Dockerfile + `.dockerignore` — dev container setup moved out of the plugin repo (project is desktop-only; build via npm, no Docker needed)
+
 ## [0.2.0] — 2026-07-31
 
 ### Added
