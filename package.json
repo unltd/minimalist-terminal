@@ -1,5 +1,5 @@
 {
-  "name": "obsidian-terminal",
+  "name": "minimalist-terminal",
   "version": "0.3.0",
   "description": "Embedded terminal for Obsidian — run CLI tools, use AI agents right inside your vault",
   "main": "main.js",

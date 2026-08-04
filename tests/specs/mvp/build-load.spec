@@ -5,7 +5,7 @@
 ## Plugin is registered and enabled
 tags: mvp, doD-1, cdp
 
-* Плагин obsidian-terminal зарегистрирован в app.plugins.plugins
-* Плагин obsidian-terminal включён (enabled)
+* Плагин minimalist-terminal зарегистрирован в app.plugins.plugins
+* Плагин minimalist-terminal включён (enabled)
 * Плагин имеет команду "Open terminal"
 * Плагин имеет ribbon-icon "terminal"

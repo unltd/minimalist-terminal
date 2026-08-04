@@ -1,6 +1,6 @@
-# Obsidian Terminal — Test Suite
+# Minimalist Terminal — Test Suite
 
-Gauge + pytest тесты для плагина Obsidian Terminal. Спецификации на Markdown (`.spec`), имплементации шагов на Python/pytest.
+Gauge + pytest тесты для плагина Minimalist Terminal. Спецификации на Markdown (`.spec`), имплементации шагов на Python/pytest.
 
 ## Структура
 

@@ -7,20 +7,20 @@ from getgauge.python import step
 from conftest import cdp_eval
 
 
-@step("Плагин obsidian-terminal зарегистрирован в app.plugins.plugins")
+@step("Плагин minimalist-terminal зарегистрирован в app.plugins.plugins")
 def plugin_is_registered():
-    result = cdp_eval("'obsidian-terminal' in app.plugins.plugins")
+    result = cdp_eval("'minimalist-terminal' in app.plugins.plugins")
     assert result is True, (
-        f"Plugin 'obsidian-terminal' not found in app.plugins.plugins. "
+        f"Plugin 'minimalist-terminal' not found in app.plugins.plugins. "
         f"Available: {cdp_eval('Object.keys(app.plugins.plugins)')}"
     )
 
 
-@step("Плагин obsidian-terminal включён (enabled)")
+@step("Плагин minimalist-terminal включён (enabled)")
 def plugin_is_enabled():
     result = cdp_eval(
-        "app.plugins.plugins['obsidian-terminal'] && "
-        "app.plugins.enabledPlugins.has('obsidian-terminal')"
+        "app.plugins.plugins['minimalist-terminal'] && "
+        "app.plugins.enabledPlugins.has('minimalist-terminal')"
     )
     assert result is True, "Plugin is not enabled"
 
@@ -53,7 +53,7 @@ def plugin_has_ribbon_icon(icon_name: str):
 
 
 def _command_id_for(name: str) -> str:
-    return {"Open terminal": "obsidian-terminal:open-terminal"}.get(name, name)
+    return {"Open terminal": "minimalist-terminal:open-terminal"}.get(name, name)
 
 
 def _ribbon_label_for(name: str) -> str:

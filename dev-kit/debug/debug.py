@@ -234,8 +234,8 @@ def cmd_test():
             "JSON.stringify({"
             "platform: navigator.platform,"
             "title: document.title,"
-            "plugin_loaded: !!(app.plugins.plugins['obsidian-terminal']),"
-            "plugin_version: (app.plugins.plugins['obsidian-terminal']?.manifest?.version) || 'N/A',"
+            "plugin_loaded: !!(app.plugins.plugins['minimalist-terminal']),"
+            "plugin_version: (app.plugins.plugins['minimalist-terminal']?.manifest?.version) || 'N/A',"
             "vault: (app.vault?.getName?.() || 'unknown')"
             "})",
             timeout=10

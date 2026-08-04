@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Obsidian Terminal** — a minimal Obsidian plugin that embeds a real bash terminal into the workspace. UX modelled after IntelliJ IDEA's terminal: ribbon icon + Command Palette entry, terminal opens as a bottom pane.
+**Minimalist Terminal** — a minimal Obsidian plugin that embeds a real bash terminal into the workspace. UX modelled after IntelliJ IDEA's terminal: ribbon icon + Command Palette entry, terminal opens as a bottom pane.
 
 Tech stack: TypeScript, esbuild, xterm.js (`@xterm/xterm` v5), node-pty (`@lydell/node-pty` v1), vanilla DOM (no UI framework).
 

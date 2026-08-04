@@ -14,7 +14,7 @@ def generate_output_lines(count: str):
     n = int(count)
     cdp_eval(f"""
         (function () {{
-            var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+            var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
             if (!view || !view.pty) throw new Error("Terminal not open");
             view.pty.write("for i in $(seq 1 {n}); do echo line_$i; done\\n");
         }})()
@@ -41,7 +41,7 @@ def buffer_length_positive(min_length: str):
     expected = int(min_length)
     length = cdp_eval("""
         (function () {
-            var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+            var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
             if (!view || !view.term) return 0;
             return view.term.buffer.active.length;
         })()
@@ -54,7 +54,7 @@ def buffer_length_at_least(count: str):
     expected = int(count)
     actual = cdp_eval("""
         (function () {
-            var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+            var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
             if (!view || !view.term) return 0;
             return view.term.buffer.active.length;
         })()

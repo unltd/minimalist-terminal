@@ -1,10 +1,10 @@
-# Contributing to Obsidian Terminal
+# Contributing to Minimalist Terminal
 
 ## Setup
 
 ```bash
-git clone https://github.com/unltd/obsidian-terminal.git
-cd obsidian-terminal
+git clone https://github.com/unltd/minimalist-terminal.git
+cd minimalist-terminal
 npm install
 ```
 

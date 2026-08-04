@@ -1,6 +1,6 @@
 # Dev Kit
 
-Инструменты разработчика для отладки и тестирования Obsidian Terminal.
+Инструменты разработчика для отладки и тестирования Minimalist Terminal.
 
 ## Структура
 
@@ -42,7 +42,7 @@ python3 dev-kit/debug/debug.py test --local
 ### 3. Выполнить JS в Obsidian
 
 ```bash
-python3 dev-kit/cdp/cdp-eval.py 'app.plugins.plugins["obsidian-terminal"]'
+python3 dev-kit/cdp/cdp-eval.py 'app.plugins.plugins["minimalist-terminal"]'
 ```
 
 ### 4. Сделать скриншот
@@ -78,15 +78,15 @@ python3 dev-kit/cdp/cdp-eval.py 'navigator.platform'
 
 # Перезагрузить плагин
 python3 dev-kit/cdp/cdp-eval.py '
-  app.plugins.disablePlugin("obsidian-terminal");
+  app.plugins.disablePlugin("minimalist-terminal");
   await new Promise(r => setTimeout(r, 300));
-  app.plugins.enablePlugin("obsidian-terminal");
+  app.plugins.enablePlugin("minimalist-terminal");
 '
 
 # Открыть терминал
 python3 dev-kit/cdp/cdp-eval.py '
   let leaf = app.workspace.getLeaf("split", "horizontal");
-  await leaf.setViewState({ type: "obsidian-terminal-view", active: true });
+  await leaf.setViewState({ type: "minimalist-terminal-view", active: true });
   app.workspace.revealLeaf(leaf);
 '
 ```

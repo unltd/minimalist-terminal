@@ -1,6 +1,6 @@
 ---
 name: terminal-debug
-description: Отладка Obsidian Terminal через CDP — авто-тесты, скриншоты, анализ пикселей без ручных действий
+description: Отладка Minimalist Terminal через CDP — авто-тесты, скриншоты, анализ пикселей без ручных действий
 user-invocable: true
 ---
 
@@ -45,9 +45,9 @@ python3 dev-kit/cdp/cdp-screenshot.py name.png # screenshots/name.png
 ### Перезагрузить плагин
 ```bash
 python3 dev-kit/cdp/cdp-eval.py '
-  app.plugins.disablePlugin("obsidian-terminal");
+  app.plugins.disablePlugin("minimalist-terminal");
   await new Promise(r => setTimeout(r, 300));
-  app.plugins.enablePlugin("obsidian-terminal");
+  app.plugins.enablePlugin("minimalist-terminal");
 '
 ```
 
@@ -55,14 +55,14 @@ python3 dev-kit/cdp/cdp-eval.py '
 ```bash
 python3 dev-kit/cdp/cdp-eval.py '
   let leaf = app.workspace.getLeaf("split", "horizontal");
-  await leaf.setViewState({ type: "obsidian-terminal-view", active: true });
+  await leaf.setViewState({ type: "minimalist-terminal-view", active: true });
   app.workspace.revealLeaf(leaf);
 '
 ```
 
 ### Доступ к TerminalView и xterm
 ```js
-let view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+let view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
 // view.term   — xterm.js Terminal
 // view.pty    — PtyBridge
 // view.container — HTMLElement контейнера
@@ -126,7 +126,7 @@ Obsidian глобально сбрасывает `position` на `static` у м�
 
 ```js
 // 1. Шпионим за pty.write (не за readText — вызывает петлю!)
-var v = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+var v = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
 var ow = v.pty.write.bind(v.pty);
 var wc = 0;
 v.pty.write = function(d) { wc++; return ow(d); };

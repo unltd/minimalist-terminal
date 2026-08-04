@@ -14,10 +14,10 @@ from conftest import cdp_eval
 def open_terminal():
     cdp_eval("""
         (function () {
-            var leaves = app.workspace.getLeavesOfType("obsidian-terminal-view");
+            var leaves = app.workspace.getLeavesOfType("minimalist-terminal-view");
             if (leaves.length === 0) {
                 var leaf = app.workspace.getLeaf("split", "horizontal");
-                leaf.setViewState({ type: "obsidian-terminal-view", active: true });
+                leaf.setViewState({ type: "minimalist-terminal-view", active: true });
             } else {
                 app.workspace.revealLeaf(leaves[0]);
             }
@@ -35,7 +35,7 @@ def wait_for_prompt(seconds: str):
         try:
             text = cdp_eval("""
                 (function () {
-                    var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+                    var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
                     if (!view || !view.term) return false;
                     var buf = view.term.buffer.active;
                     for (var i = buf.length - 1; i >= 0; i--) {
@@ -60,7 +60,7 @@ def wait_for_prompt(seconds: str):
 def type_command(command: str):
     cdp_eval(f"""
         (function () {{
-            var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+            var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
             if (!view || !view.pty) throw new Error("Terminal not open");
             view.pty.write({command!r} + "\\n");
         }})()
@@ -78,7 +78,7 @@ def output_contains_within(seconds: str, expected: str):
     while time.monotonic() < deadline:
         text = cdp_eval("""
             (function () {
-                var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+                var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
                 if (!view || !view.term) return "";
                 var buf = view.term.buffer.active;
                 var lines = [];
@@ -105,7 +105,7 @@ def prompt_returns(seconds: str):
         try:
             text = cdp_eval("""
                 (function () {
-                    var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+                    var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
                     if (!view || !view.term) return "";
                     var buf = view.term.buffer.active;
                     var last = buf.getLine(buf.length - 1);

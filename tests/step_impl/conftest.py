@@ -1,5 +1,5 @@
 """
-Shared fixtures for Obsidian Terminal tests.
+Shared fixtures for Minimalist Terminal tests.
 
 Provides:
 - cdp_eval(js)    — execute JS in Obsidian via CDP, return parsed result
@@ -161,11 +161,11 @@ def term_view():
     """Return a JS expression that resolves to the active TerminalView."""
     cdp_eval("""
         (function () {
-            var leaf = app.workspace.getLeavesOfType("obsidian-terminal-view")[0];
+            var leaf = app.workspace.getLeavesOfType("minimalist-terminal-view")[0];
             if (!leaf) {
                 leaf = app.workspace.getLeaf("split", "horizontal");
             }
-            leaf.setViewState({ type: "obsidian-terminal-view", active: true });
+            leaf.setViewState({ type: "minimalist-terminal-view", active: true });
         })()
     """)
     # Give the terminal time to open and initialize

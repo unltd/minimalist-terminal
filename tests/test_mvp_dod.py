@@ -38,16 +38,16 @@ FOCUS_TIMEOUT = 12         # max wait for autofocus (~2 CDP calls, spaced ~5s ap
 # ═══════════════════════════════════════════════════════════════════
 
 def test_dod1_plugin_registered():
-    """Плагин obsidian-terminal зарегистрирован в app.plugins.plugins."""
-    result = cdp_eval("'obsidian-terminal' in app.plugins.plugins")
+    """Плагин minimalist-terminal зарегистрирован в app.plugins.plugins."""
+    result = cdp_eval("'minimalist-terminal' in app.plugins.plugins")
     assert result is True, f"Plugin not found. Available: {cdp_eval('Object.keys(app.plugins.plugins)')}"
 
 
 def test_dod1_plugin_enabled():
-    """Плагин obsidian-terminal включён."""
+    """Плагин minimalist-terminal включён."""
     result = cdp_eval(
-        "app.plugins.plugins['obsidian-terminal'] && "
-        "app.plugins.enabledPlugins.has('obsidian-terminal')"
+        "app.plugins.plugins['minimalist-terminal'] && "
+        "app.plugins.enabledPlugins.has('minimalist-terminal')"
     )
     assert result is True, "Plugin is not enabled"
 
@@ -57,10 +57,10 @@ def test_dod1_has_open_terminal_command():
     result = cdp_eval(
         "(function () {"
         "  var cmds = Object.values(app.commands.commands);"
-        "  return cmds.some(function (c) { return c.id === 'obsidian-terminal:open-terminal'; });"
+        "  return cmds.some(function (c) { return c.id === 'minimalist-terminal:open-terminal'; });"
         "})()"
     )
-    assert result is True, "Command 'obsidian-terminal:open-terminal' not registered"
+    assert result is True, "Command 'minimalist-terminal:open-terminal' not registered"
 
 
 def test_dod1_has_ribbon_icon():
@@ -84,9 +84,9 @@ def test_dod1_has_ribbon_icon():
 def test_dod2_open_via_command_palette():
     """Терминал открывается через Command Palette."""
     _close_all_terminal_leaves()
-    cdp_eval("app.commands.executeCommandById('obsidian-terminal:open-terminal');")
+    cdp_eval("app.commands.executeCommandById('minimalist-terminal:open-terminal');")
     time.sleep(PTY_SPAWN_WAIT)
-    count = cdp_eval("app.workspace.getLeavesOfType('obsidian-terminal-view').length")
+    count = cdp_eval("app.workspace.getLeavesOfType('minimalist-terminal-view').length")
     assert count >= 1, f"No terminal leaf found (count={count})"
 
 
@@ -100,11 +100,11 @@ def test_dod2_dom_has_xterm():
 def test_dod2_no_duplicate_on_reopen():
     """Повторное открытие не дублирует листья."""
     _close_all_terminal_leaves()
-    cdp_eval("app.commands.executeCommandById('obsidian-terminal:open-terminal');")
+    cdp_eval("app.commands.executeCommandById('minimalist-terminal:open-terminal');")
     time.sleep(PTY_SPAWN_WAIT)
-    cdp_eval("app.commands.executeCommandById('obsidian-terminal:open-terminal');")
+    cdp_eval("app.commands.executeCommandById('minimalist-terminal:open-terminal');")
     time.sleep(1.0)
-    count = cdp_eval("app.workspace.getLeavesOfType('obsidian-terminal-view').length")
+    count = cdp_eval("app.workspace.getLeavesOfType('minimalist-terminal-view').length")
     assert count == 1, f"Expected 1 leaf, found {count}"
 
 
@@ -160,7 +160,7 @@ def test_dod4_selection_returns_text():
 
     cdp_eval("""
         (function () {
-            var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+            var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
             if (!view || !view.term) throw new Error("Terminal not open");
             var buf = view.term.buffer.active;
             var endLine = Math.min(buf.length - 1, 10);
@@ -171,7 +171,7 @@ def test_dod4_selection_returns_text():
 
     selection = cdp_eval("""
         (function () {
-            var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+            var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
             if (!view || !view.term) return null;
             return view.term.getSelection();
         })()
@@ -201,7 +201,7 @@ def test_dod4_selection_layer_exists():
     # Make a selection — xterm.js creates .xterm-selection divs
     cdp_eval("""
         (function () {
-            var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+            var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
             if (!view || !view.term) return;
             var buf = view.term.buffer.active;
             if (buf.length > 0) view.term.selectLines(0, Math.min(buf.length - 1, 3));
@@ -228,14 +228,14 @@ def test_dod5_scroll_after_filling_buffer():
     # Check buffer has grown beyond visible rows
     rows = cdp_eval("""
         (function () {
-            var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+            var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
             if (!view || !view.term) return 0;
             return view.term.rows;
         })()
     """)
     buf_len = cdp_eval("""
         (function () {
-            var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+            var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
             if (!view || !view.term) return 0;
             return view.term.buffer.active.length;
         })()
@@ -255,7 +255,7 @@ def test_dod5_buffer_has_scrollback():
 
     length = cdp_eval("""
         (function () {
-            var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+            var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
             if (!view || !view.term) return 0;
             return view.term.buffer.active.length;
         })()
@@ -273,7 +273,7 @@ def test_dod6_autofocus_on_open():
     cdp_eval("""
         (function () {
             var leaf = app.workspace.getLeaf("split", "horizontal");
-            leaf.setViewState({ type: "obsidian-terminal-view", active: true });
+            leaf.setViewState({ type: "minimalist-terminal-view", active: true });
         })()
     """)
     time.sleep(PTY_SPAWN_WAIT)
@@ -333,7 +333,7 @@ def test_dod7_close_by_exit_no_zombies():
     # Wait for leaf to close (with CDP-latency-aware intervals)
     for _ in range(10):
         time.sleep(FAST_POLL)
-        count = cdp_eval("app.workspace.getLeavesOfType('obsidian-terminal-view').length")
+        count = cdp_eval("app.workspace.getLeavesOfType('minimalist-terminal-view').length")
         if count == 0:
             break
     else:
@@ -347,11 +347,11 @@ def test_dod7_close_by_api_no_zombies():
     """Закрытие через workspace.detachLeavesOfType не оставляет зомби."""
     _ensure_terminal_open()
     _wait_for_prompt()
-    cdp_eval("app.workspace.detachLeavesOfType('obsidian-terminal-view');")
+    cdp_eval("app.workspace.detachLeavesOfType('minimalist-terminal-view');")
 
     for _ in range(6):
         time.sleep(FAST_POLL)
-        count = cdp_eval("app.workspace.getLeavesOfType('obsidian-terminal-view').length")
+        count = cdp_eval("app.workspace.getLeavesOfType('minimalist-terminal-view').length")
         if count == 0:
             break
     else:
@@ -366,7 +366,7 @@ def test_dod7_close_by_api_no_zombies():
 # ═══════════════════════════════════════════════════════════════════
 
 def _close_all_terminal_leaves():
-    cdp_eval("app.workspace.detachLeavesOfType('obsidian-terminal-view');")
+    cdp_eval("app.workspace.detachLeavesOfType('minimalist-terminal-view');")
     time.sleep(0.5)
 
 
@@ -376,12 +376,12 @@ def _ensure_terminal_open():
     Does NOT do extra CDP readiness checks — _wait_for_prompt() serves
     as the natural readiness gate (it polls until the shell prompt appears).
     """
-    cdp_eval("app.workspace.detachLeavesOfType('obsidian-terminal-view');")
+    cdp_eval("app.workspace.detachLeavesOfType('minimalist-terminal-view');")
     time.sleep(0.5)
     cdp_eval("""
         (function () {
             var leaf = app.workspace.getLeaf("split", "horizontal");
-            leaf.setViewState({ type: "obsidian-terminal-view", active: true });
+            leaf.setViewState({ type: "minimalist-terminal-view", active: true });
         })()
     """)
     time.sleep(PTY_SPAWN_WAIT)
@@ -399,7 +399,7 @@ def _pty_write(data: str):
     escaped = text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
     cdp_eval(f"""
         (function () {{
-            var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+            var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
             if (!view || !view.pty) throw new Error("Terminal not open");
             view.pty.write("{escaped}\\n");
         }})()
@@ -413,7 +413,7 @@ def _wait_for_prompt(timeout: int = PROMPT_TIMEOUT):
         try:
             text = cdp_eval("""
                 (function () {
-                    var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+                    var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
                     if (!view || !view.term) return false;
                     var buf = view.term.buffer.active;
                     for (var i = buf.length - 1; i >= 0; i--) {
@@ -442,7 +442,7 @@ def _wait_for_text(search: str, timeout: int = TEXT_TIMEOUT):
         try:
             text = cdp_eval("""
                 (function () {
-                    var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+                    var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
                     if (!view || !view.term) return "";
                     var buf = view.term.buffer.active;
                     var lines = [];
@@ -468,7 +468,7 @@ def _terminal_buffer_text(lines: int = 10) -> str:
     try:
         return str(cdp_eval(f"""
             (function () {{
-                var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+                var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
                 if (!view || !view.term) return "";
                 var buf = view.term.buffer.active;
                 var out = [];

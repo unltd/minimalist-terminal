@@ -186,7 +186,7 @@ echo "========================================"
 if [ "$CDP_READY" -eq 1 ]; then
     echo
     echo "Container (from project root):"
-    echo "  python3 dev-kit/cdp/cdp-eval.py 'app.plugins.enablePlugin(\"obsidian-terminal\")'"
+    echo "  python3 dev-kit/cdp/cdp-eval.py 'app.plugins.enablePlugin(\"minimalist-terminal\")'"
     echo "  python3 dev-kit/cdp/cdp-screenshot.py"
     echo
     echo "Host:"

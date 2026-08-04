@@ -66,21 +66,21 @@ python3 dev-kit/cdp/cdp-eval.py '
 
 # Plugin actions
 python3 dev-kit/cdp/cdp-eval.py '
-  app.plugins.disablePlugin("obsidian-terminal");
-  app.plugins.enablePlugin("obsidian-terminal");
+  app.plugins.disablePlugin("minimalist-terminal");
+  app.plugins.enablePlugin("minimalist-terminal");
   "reloaded"
 '
 
 # Open terminal
 python3 dev-kit/cdp/cdp-eval.py '
   let leaf = app.workspace.getLeaf("split", "horizontal");
-  leaf.setViewState({ type: "obsidian-terminal-view", active: true });
+  leaf.setViewState({ type: "minimalist-terminal-view", active: true });
   "opened"
 '
 
 # Select text in terminal
 python3 dev-kit/cdp/cdp-eval.py '
-  let view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+  let view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
   view?.term?.selectLines(0, 3);
   "selected"
 '

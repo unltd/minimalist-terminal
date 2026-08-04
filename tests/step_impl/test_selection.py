@@ -15,7 +15,7 @@ def terminal_has_buffer_text():
     time.sleep(0.5)
     length = cdp_eval("""
         (function () {
-            var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+            var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
             if (!view || !view.term) return 0;
             return view.term.buffer.active.length;
         })()
@@ -27,7 +27,7 @@ def terminal_has_buffer_text():
 def select_lines_returns_text():
     cdp_eval("""
         (function () {
-            var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+            var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
             if (!view || !view.term) throw new Error("Terminal not open");
             var buf = view.term.buffer.active;
             var endLine = Math.min(buf.length - 1, 10);
@@ -40,7 +40,7 @@ def select_lines_returns_text():
 
     selection = cdp_eval("""
         (function () {
-            var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+            var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
             if (!view || !view.term) return null;
             return view.term.getSelection();
         })()

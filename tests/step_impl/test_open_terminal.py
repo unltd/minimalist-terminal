@@ -11,7 +11,7 @@ from conftest import cdp_eval
 @step("Закрыть все листья терминала")
 def close_all_terminal_leaves():
     cdp_eval(
-        "app.workspace.detachLeavesOfType('obsidian-terminal-view');"
+        "app.workspace.detachLeavesOfType('minimalist-terminal-view');"
     )
 
 

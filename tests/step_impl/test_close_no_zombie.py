@@ -15,7 +15,7 @@ from conftest import cdp_eval
 def send_command_with_newline(command: str):
     cdp_eval(f"""
         (function () {{
-            var view = app.workspace.getLeavesOfType("obsidian-terminal-view")[0]?.view;
+            var view = app.workspace.getLeavesOfType("minimalist-terminal-view")[0]?.view;
             if (!view || !view.pty) throw new Error("Terminal not open");
             view.pty.write({command!r} + "\\n");
         }})()
@@ -29,7 +29,7 @@ def terminal_leaf_removed(seconds: str):
 
     while time.monotonic() < deadline:
         count = cdp_eval(
-            "app.workspace.getLeavesOfType('obsidian-terminal-view').length"
+            "app.workspace.getLeavesOfType('minimalist-terminal-view').length"
         )
         if count == 0:
             return
@@ -77,5 +77,5 @@ def no_node_pty_processes():
 @step("Закрыть все листья терминала через workspace API")
 def close_all_terminal_leaves_via_api():
     cdp_eval(
-        "app.workspace.detachLeavesOfType('obsidian-terminal-view');"
+        "app.workspace.detachLeavesOfType('minimalist-terminal-view');"
     )

@@ -1,1 +1,1 @@
-# Gauge + pytest step implementations for Obsidian Terminal MVP tests.
+# Gauge + pytest step implementations for Minimalist Terminal MVP tests.

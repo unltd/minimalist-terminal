@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Install obsidian-terminal plugin into an Obsidian vault.
+# Install minimalist-terminal plugin into an Obsidian vault.
 # Usage: ./install.sh [vault-path]
 #
 # vault-path is required — either as a command-line argument or
@@ -24,7 +24,7 @@ if [ ! -d "$VAULT" ]; then
   exit 1
 fi
 
-TARGET="$VAULT/.obsidian/plugins/obsidian-terminal"
+TARGET="$VAULT/.obsidian/plugins/minimalist-terminal"
 echo "Installing to $TARGET ..."
 
 mkdir -p "$TARGET"

@@ -1,12 +1,12 @@
-# Obsidian Terminal
+# Minimalist Terminal
 
 Embedded terminal for [Obsidian](https://obsidian.md) — run CLI tools, use AI agents right inside your vault.
 
-[![Version](https://img.shields.io/github/v/release/unltd/obsidian-terminal)](https://github.com/unltd/obsidian-terminal/releases)
-[![License](https://img.shields.io/github/license/unltd/obsidian-terminal)](LICENSE)
-[![CI](https://img.shields.io/github/actions/workflow/status/unltd/obsidian-terminal/ci.yml)](https://github.com/unltd/obsidian-terminal/actions)
+[![Version](https://img.shields.io/github/v/release/unltd/minimalist-terminal)](https://github.com/unltd/minimalist-terminal/releases)
+[![License](https://img.shields.io/github/license/unltd/minimalist-terminal)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/unltd/minimalist-terminal/ci.yml)](https://github.com/unltd/minimalist-terminal/actions)
 
-![Terminal screenshot](assets/terminal-screenshot.png)
+![Minimalist Terminal screenshot](assets/terminal-screenshot.png)
 
 ## Features
 
@@ -25,7 +25,7 @@ Embedded terminal for [Obsidian](https://obsidian.md) — run CLI tools, use AI 
 Install via **Obsidian Community Plugins**:
 
 1. Settings → Community Plugins → Browse
-2. Search for **Terminal**
+2. Search for **Minimalist Terminal**
 3. Install and Enable
 
 ### Open a terminal
@@ -35,15 +35,15 @@ Install via **Obsidian Community Plugins**:
 
 ### Configure your shell (optional)
 
-Settings → Community Plugins → **Terminal** → Options (⚙️) → choose from detected shells or enter a custom path.
+Settings → Community Plugins → **Minimalist Terminal** → Options (⚙️) → choose from detected shells or enter a custom path.
 
 ### Development setup
 
 ```bash
 # Clone into your vault's plugins directory
 cd <vault>/.obsidian/plugins/
-git clone https://github.com/unltd/obsidian-terminal.git
-cd obsidian-terminal
+git clone https://github.com/unltd/minimalist-terminal.git
+cd minimalist-terminal
 npm install
 npm run build
 ```

@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-:: install.bat — Install obsidian-terminal plugin into an Obsidian vault.
+:: install.bat — Install minimalist-terminal plugin into an Obsidian vault.
 :: Usage: install.bat [vault-path]
 ::
 :: vault-path is required — either as a command-line argument or
@@ -19,7 +19,7 @@ if "%VAULT%"=="" (
 :: Remove trailing backslash if present
 if "!VAULT:~-1!"=="\" set "VAULT=!VAULT:~0,-1!"
 
-set "TARGET=!VAULT!\.obsidian\plugins\obsidian-terminal"
+set "TARGET=!VAULT!\.obsidian\plugins\minimalist-terminal"
 
 if not exist "!VAULT!" (
     echo Error: vault not found at !VAULT!

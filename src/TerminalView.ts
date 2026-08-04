@@ -3,7 +3,7 @@ import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { PtyBridge } from "./PtyBridge";
 
-export const VIEW_TYPE_TERMINAL = "obsidian-terminal-view";
+export const VIEW_TYPE_TERMINAL = "minimalist-terminal-view";
 
 /** Shell path, set by the plugin from user settings before opening views. */
 export let terminalShell: string = "";

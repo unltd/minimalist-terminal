@@ -13,7 +13,7 @@ if [ -z "$VAULT" ]; then
   exit 1
 fi
 
-PLUGIN_DIR="$VAULT/.obsidian/plugins/obsidian-terminal"
+PLUGIN_DIR="$VAULT/.obsidian/plugins/minimalist-terminal"
 
 mkdir -p "$PLUGIN_DIR"
 cp main.js manifest.json styles.css "$PLUGIN_DIR/"
