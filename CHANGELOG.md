@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-08-04
+
+### Added
+- OSC 52 clipboard handler — tmux can write to the system clipboard
+- GitHub Release workflow — auto-publish `main.js`/`manifest.json`/`styles.css` on `v*` tags
+- `SECURITY.md` — security policy (private vulnerability reporting)
+
+### Changed
+- Clipboard paste: single code path via synchronous `ClipboardEvent` handler — no double paste
+- Platform dependencies moved to `optionalDependencies`, OS matrix (ubuntu/macos/windows × Node 22) in CI
+
+### Fixed
+- `copy` event handled instead of blocked — prevents xterm.js duplicate handler
+- node-pty Linux prebuilds added to `package-lock.json` for `npm ci`
+
 ### Removed
 - Dockerfile + `.dockerignore` — dev container setup moved out of the plugin repo (project is desktop-only; build via npm, no Docker needed)
 
