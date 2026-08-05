@@ -9,7 +9,7 @@ from getgauge.python import step
 from conftest import cdp_eval
 
 
-@step("В течение <seconds> секунд терминал получает фокус")
+@step("Within <seconds> seconds the terminal gains focus")
 def terminal_gets_focus_within(seconds: str):
     timeout_ms = int(seconds) * 1000
     deadline = time.monotonic() + timeout_ms / 1000
@@ -39,7 +39,7 @@ def terminal_gets_focus_within(seconds: str):
     )
 
 
-@step("Активный элемент — textarea внутри xterm")
+@step("Active element is a textarea inside xterm")
 def active_element_is_xterm_textarea():
     result = cdp_eval("""
         (function () {
@@ -60,7 +60,7 @@ def active_element_is_xterm_textarea():
     )
 
 
-@step("Кликнуть в контейнер терминала")
+@step("Click the terminal container")
 def click_terminal_container():
     cdp_eval("""
         (function () {

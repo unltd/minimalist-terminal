@@ -38,13 +38,13 @@ FOCUS_TIMEOUT = 12         # max wait for autofocus (~2 CDP calls, spaced ~5s ap
 # ═══════════════════════════════════════════════════════════════════
 
 def test_dod1_plugin_registered():
-    """Плагин minimalist-terminal зарегистрирован в app.plugins.plugins."""
+    """Plugin minimalist-terminal is registered in app.plugins.plugins."""
     result = cdp_eval("'minimalist-terminal' in app.plugins.plugins")
     assert result is True, f"Plugin not found. Available: {cdp_eval('Object.keys(app.plugins.plugins)')}"
 
 
 def test_dod1_plugin_enabled():
-    """Плагин minimalist-terminal включён."""
+    """Plugin minimalist-terminal is enabled."""
     result = cdp_eval(
         "app.plugins.plugins['minimalist-terminal'] && "
         "app.plugins.enabledPlugins.has('minimalist-terminal')"
@@ -53,7 +53,7 @@ def test_dod1_plugin_enabled():
 
 
 def test_dod1_has_open_terminal_command():
-    """Плагин имеет команду 'Open terminal'."""
+    """Plugin has command 'Open terminal'."""
     result = cdp_eval(
         "(function () {"
         "  var cmds = Object.values(app.commands.commands);"
@@ -64,7 +64,7 @@ def test_dod1_has_open_terminal_command():
 
 
 def test_dod1_has_ribbon_icon():
-    """Плагин имеет ribbon-icon 'terminal'."""
+    """Plugin has ribbon-icon 'terminal'."""
     result = cdp_eval(
         "(function () {"
         "  var items = document.querySelectorAll('.side-dock-ribbon-action');"
@@ -82,7 +82,7 @@ def test_dod1_has_ribbon_icon():
 # ═══════════════════════════════════════════════════════════════════
 
 def test_dod2_open_via_command_palette():
-    """Терминал открывается через Command Palette."""
+    """Terminal opens via the Command Palette."""
     _close_all_terminal_leaves()
     cdp_eval("app.commands.executeCommandById('minimalist-terminal:open-terminal');")
     time.sleep(PTY_SPAWN_WAIT)
@@ -91,14 +91,14 @@ def test_dod2_open_via_command_palette():
 
 
 def test_dod2_dom_has_xterm():
-    """DOM содержит элемент xterm после открытия."""
+    """DOM contains an xterm element after opening."""
     _ensure_terminal_open()
     result = cdp_eval("document.querySelector('.xterm') !== null")
     assert result is True, "No .xterm element in DOM"
 
 
 def test_dod2_no_duplicate_on_reopen():
-    """Повторное открытие не дублирует листья."""
+    """Reopening does not duplicate leaves."""
     _close_all_terminal_leaves()
     cdp_eval("app.commands.executeCommandById('minimalist-terminal:open-terminal');")
     time.sleep(PTY_SPAWN_WAIT)
@@ -113,7 +113,7 @@ def test_dod2_no_duplicate_on_reopen():
 # ═══════════════════════════════════════════════════════════════════
 
 def test_dod3_echo_command():
-    """Команда echo выполняется и вывод отображается."""
+    """The echo command executes and output is displayed."""
     _ensure_terminal_open()
     _wait_for_prompt()
     _pty_write("echo hello_mvp_test\n")
@@ -122,7 +122,7 @@ def test_dod3_echo_command():
 
 
 def test_dod3_pwd_command():
-    """Команда pwd выводит путь с '/'."""
+    """The pwd command prints the path with '/'."""
     _ensure_terminal_open()
     _wait_for_prompt()
     _pty_write("pwd\n")
@@ -131,7 +131,7 @@ def test_dod3_pwd_command():
 
 
 def test_dod3_prompt_returns():
-    """После команды возвращается приглашение."""
+    """Prompt returns after the command."""
     _ensure_terminal_open()
     _wait_for_prompt()
     _pty_write("echo done\n")
@@ -152,7 +152,7 @@ def test_dod3_prompt_returns():
 # ═══════════════════════════════════════════════════════════════════
 
 def test_dod4_selection_returns_text():
-    """Программное выделение возвращает текст."""
+    """Programmatic selection returns text."""
     _ensure_terminal_open()
     _wait_for_prompt()
     _pty_write("echo selection_test_line\n")
@@ -181,7 +181,7 @@ def test_dod4_selection_returns_text():
 
 
 def test_dod4_xterm_screen_position_is_relative():
-    """xterm-screen имеет position: relative (не переопределено Obsidian CSS)."""
+    """.xterm-screen has position: relative (not overridden by Obsidian CSS)."""
     _ensure_terminal_open()
     pos = cdp_eval("""
         (function () {
@@ -193,7 +193,7 @@ def test_dod4_xterm_screen_position_is_relative():
 
 
 def test_dod4_selection_layer_exists():
-    """xterm-selection элементы существуют в DOM после выделения."""
+    """.xterm-selection elements exist in the DOM after selection."""
     _ensure_terminal_open()
     _wait_for_prompt()
     _pty_write("echo make_selection_test\n")
@@ -219,7 +219,7 @@ def test_dod4_selection_layer_exists():
 # ═══════════════════════════════════════════════════════════════════
 
 def test_dod5_scroll_after_filling_buffer():
-    """Скролл появляется после заполнения буфера."""
+    """Scroll appears after the buffer fills up."""
     _ensure_terminal_open()
     _wait_for_prompt()
     _pty_write("seq 1 100\n")
@@ -247,7 +247,7 @@ def test_dod5_scroll_after_filling_buffer():
 
 
 def test_dod5_buffer_has_scrollback():
-    """Буфер терминала содержит строки вывода."""
+    """Terminal buffer contains output lines."""
     _ensure_terminal_open()
     _wait_for_prompt()
     _pty_write("seq 1 50\n")
@@ -268,7 +268,7 @@ def test_dod5_buffer_has_scrollback():
 # ═══════════════════════════════════════════════════════════════════
 
 def test_dod6_autofocus_on_open():
-    """Терминал получает фокус после открытия."""
+    """Terminal gains focus after opening."""
     _close_all_terminal_leaves()
     cdp_eval("""
         (function () {
@@ -297,7 +297,7 @@ def test_dod6_autofocus_on_open():
 
 
 def test_dod6_active_element_is_textarea():
-    """Активный элемент — textarea внутри xterm."""
+    """Active element is a textarea inside xterm."""
     _ensure_terminal_open()
     cdp_eval("""
         (function () {
@@ -325,7 +325,7 @@ def test_dod6_active_element_is_textarea():
 # ═══════════════════════════════════════════════════════════════════
 
 def test_dod7_close_by_exit_no_zombies():
-    """Закрытие по exit не оставляет зомби."""
+    """Closing by exit leaves no zombies."""
     _ensure_terminal_open()
     _wait_for_prompt()
     _pty_write("exit\n")
@@ -344,7 +344,7 @@ def test_dod7_close_by_exit_no_zombies():
 
 
 def test_dod7_close_by_api_no_zombies():
-    """Закрытие через workspace.detachLeavesOfType не оставляет зомби."""
+    """Closing via workspace.detachLeavesOfType leaves no zombies."""
     _ensure_terminal_open()
     _wait_for_prompt()
     cdp_eval("app.workspace.detachLeavesOfType('minimalist-terminal-view');")

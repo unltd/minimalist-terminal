@@ -9,7 +9,7 @@ from getgauge.python import step
 from conftest import cdp_eval
 
 
-@step("Ввести команду для генерации <count> строк вывода")
+@step("Enter command to generate <count> lines of output")
 def generate_output_lines(count: str):
     n = int(count)
     cdp_eval(f"""
@@ -23,7 +23,7 @@ def generate_output_lines(count: str):
     time.sleep(wait)
 
 
-@step("Вьюпорт терминала имеет ненулевой scrollTop")
+@step("Terminal viewport has non-zero scrollTop")
 def viewport_has_scroll():
     scroll_top = cdp_eval("""
         (function () {
@@ -36,7 +36,7 @@ def viewport_has_scroll():
     assert scroll_top > 0, f"Expected scrollTop > 0, got {scroll_top}"
 
 
-@step("Длина буфера терминала больше <min_length>")
+@step("Terminal buffer length is greater than <min_length>")
 def buffer_length_positive(min_length: str):
     expected = int(min_length)
     length = cdp_eval("""
@@ -49,7 +49,7 @@ def buffer_length_positive(min_length: str):
     assert length > expected, f"Terminal buffer length {length} <= {expected}"
 
 
-@step("Длина буфера терминала не меньше <count>")
+@step("Terminal buffer length is at least <count>")
 def buffer_length_at_least(count: str):
     expected = int(count)
     actual = cdp_eval("""

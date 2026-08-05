@@ -86,64 +86,64 @@ This project uses **claudocker** — a Docker-based containerized development en
 
 ## Knowledge Base
 
-Неочевидные проблемы и решения документируются в `autodocs/knowledge-base/`. При обнаружении новой проблемы — создать файл по шаблону `autodocs/knowledge-base/template.md`.
+Non-obvious problems and solutions are documented in `autodocs/knowledge-base/`. When you discover a new problem, create a file using the template `autodocs/knowledge-base/template.md`.
 
-**Важно:** при добавлении новой находки добавлять перекрёстные ссылки `[[related-key]]` на существующие файлы KB.
+**Important:** when adding a new finding, add cross-references `[[related-key]]` to existing KB files.
 
-Текущие находки:
-- [[obsidian-css-overrides-position]] — Obsidian сбрасывает CSS position на static
-- [[electron-require-resolution]] — node-pty требует абсолютный путь в require()
-- [[obsidian-steals-focus]] — Obsidian крадёт фокус после открытия ItemView
-- [[shell-login-interactive-nvm]] — nvm требует login shell (-l -i)
-- [[esbuild-native-modules-external]] — нативные модули должны быть external в esbuild
-- [[cdp-remote-debugging]] — отладка через Chrome DevTools Protocol
+Current findings:
+- [[obsidian-css-overrides-position]] — Obsidian resets CSS position to static
+- [[electron-require-resolution]] — node-pty requires an absolute path in require()
+- [[obsidian-steals-focus]] — Obsidian steals focus after opening an ItemView
+- [[shell-login-interactive-nvm]] — nvm requires a login shell (-l -i)
+- [[esbuild-native-modules-external]] — native modules must be external in esbuild
+- [[cdp-remote-debugging]] — debugging via the Chrome DevTools Protocol
 
 ## Task Documentation
 
-Задачи документируются в `autodocs/tasks/` по шаблону `autodocs/tasks/template.md`. Формат имени файла: `YYYY-MM-DD--task-slug.md`.
+Tasks are documented in `autodocs/tasks/` using the template `autodocs/tasks/template.md`. Filename format: `YYYY-MM-DD--task-slug.md`.
 
-**Когда создавать задачу:**
-- Новая фича, затрагивающая >1 файл
-- Нетривиальный баг, требующий исследования
-- Архитектурное решение с несколькими вариантами
-- Перед началом крупного рефакторинга
+**When to create a task:**
+- A new feature affecting >1 file
+- A non-trivial bug requiring investigation
+- An architectural decision with several options
+- Before starting a major refactoring
 
-**Оценка сложности в токенах** (поле `Estimate`):
-- **S (~5k)** — мелкий фикс, одна правка в одном файле
-- **M (~20k)** — фича/баг в 2-3 файлах, немного исследования
-- **L (~50k)** — крупная фича, несколько итераций, затрагивает архитектуру
-- **XL (~100k+)** — эпик, требует дизайна, нескольких PR, может быть разбит на подзадачи
+**Effort estimate in tokens** (field `Estimate`):
+- **S (~5k)** — a small fix, one edit in one file
+- **M (~20k)** — a feature/bug in 2-3 files, a little research
+- **L (~50k)** — a large feature, several iterations, affects the architecture
+- **XL (~100k+)** — an epic, requires design, multiple PRs, can be split into subtasks
 
 **Workflow:**
-1. Создать файл задачи из шаблона, заполнить Overview и Design
-2. Согласовать план с пользователем (если нужно)
-3. В процессе: отмечать Completed, обновлять Remaining
-4. По завершении: отметить все `[x]` в Definition of Done, Status → done, закоммитить
+1. Create a task file from the template, fill in Overview and Design
+2. Align the plan with the user (if needed)
+3. During work: mark Completed, update Remaining
+4. On completion: mark all `[x]` in Definition of Done, Status → done, commit
 
-**Связанные KB-файлы и задачи** линкуются через `[[wikilink]]`.
+**Related KB files and tasks** are linked via `[[wikilink]]`.
 
 ## Ideas
 
-Идеи хранятся в `autodocs/ideas/` по шаблону `autodocs/ideas/template.md`. Формат имени файла: `YYYY-MM-DD--idea-slug.md`.
+Ideas are stored in `autodocs/ideas/` using the template `autodocs/ideas/template.md`. Filename format: `YYYY-MM-DD--idea-slug.md`.
 
-**Когда создавать идею:**
-- Придумали фичу, но не уверены, нужна ли она — не хотите сразу заводить задачу
-- Увидели проблему, но решение пока неочевидно
-- Хочется зафиксировать мысль «а что если…» без commitment к реализации
+**When to create an idea:**
+- You came up with a feature but aren't sure it's needed — you don't want to file a task right away
+- You saw a problem, but the solution isn't obvious yet
+- You want to capture a "what if…" thought without committing to implementation
 
-**Статусы:**
-- `idea` — сырая мысль, не думали глубоко
-- `exploring` — изучаем, читаем код, проверяем feasibility
-- `planned` — идея принята, создана задача в `autodocs/tasks/` (добавить ссылку в `Related`)
-- `discarded` — отклонили (с указанием причины в Notes)
+**Statuses:**
+- `idea` — a raw thought, not deeply considered
+- `exploring` — investigating, reading code, checking feasibility
+- `planned` — idea accepted, a task was created in `autodocs/tasks/` (add a link in `Related`)
+- `discarded` — rejected (with the reason noted in Notes)
 
 **Workflow:**
-1. Поймали мысль → создать файл из шаблона, статус `idea`
-2. Решили копнуть → статус `exploring`, заполнить Risks / unknowns
-3. Идея принята → статус `planned`, создать задачу, проставить перекрёстные ссылки
-4. Идея отклонена → статус `discarded`, записать причину в Notes
+1. Caught a thought → create a file from the template, status `idea`
+2. Decided to dig deeper → status `exploring`, fill in Risks / unknowns
+3. Idea accepted → status `planned`, create a task, add cross-references
+4. Idea rejected → status `discarded`, record the reason in Notes
 
-**Связанные задачи и KB** линкуются через `[[wikilink]]` в поле `Related`.
+**Related tasks and KB** are linked via `[[wikilink]]` in the `Related` field.
 
 ## Screenshot Analysis Workflow
 

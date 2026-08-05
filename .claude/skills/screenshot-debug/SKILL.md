@@ -1,31 +1,31 @@
 ---
 name: screenshot-debug
-description: Отладка через скриншоты — захват, пиксельный анализ, диагностика проблем рендеринга терминала
+description: Screenshot debugging — capture, pixel analysis, diagnosis of terminal rendering issues
 user-invocable: true
 ---
 
 # screenshot-debug
 
-Специализированный скилл для цикла «скриншот → анализ пикселей → диагноз». В отличие от `terminal-debug` (общая отладка), этот скилл фокусируется на визуальной диагностике: захват скриншота через CDP, извлечение пиксельных данных, сопоставление с DOM-состоянием, формирование гипотез.
+Specialized skill for the "screenshot → pixel analysis → diagnosis" loop. Unlike `terminal-debug` (general debugging), this skill focuses on visual diagnostics: capturing a screenshot via CDP, extracting pixel data, correlating with the DOM state, forming hypotheses.
 
-## Когда использовать
+## When to use
 
-- После изменения CSS/DOM структуры — проверить, не сломалось ли выделение
-- При любом визуальном баге: призраки выделения, смещение текста, `$$$$` в углу
-- Перед коммитом — быстрый визуальный diff
-- Когда пользователь присылает скриншот — проанализировать и дать заключение
+- After changing CSS/DOM structure — check that selection did not break
+- For any visual bug: selection ghosts, text offset, `$$$$` in the corner
+- Before committing — quick visual diff
+- When the user sends a screenshot — analyze and give a conclusion
 
-## Инструменты
+## Tools
 
-### Захват
+### Capture
 
 ```bash
-python3 dev-kit/cdp/cdp-screenshot.py              # screenshots/N.png (автоинкремент)
+python3 dev-kit/cdp/cdp-screenshot.py              # screenshots/N.png (auto-increment)
 python3 dev-kit/cdp/cdp-screenshot.py name.png     # screenshots/name.png
-python3 dev-kit/cdp/cdp-screenshot.py via-eval.png # скриншот + доп. JS перед захватом
+python3 dev-kit/cdp/cdp-screenshot.py via-eval.png # screenshot + extra JS before capture
 ```
 
-### Пиксельный анализ (PIL)
+### Pixel analysis (PIL)
 
 ```python
 from PIL import Image
@@ -34,22 +34,22 @@ import numpy as np
 img = Image.open('screenshots/N.png')
 arr = np.array(img)
 
-# Профиль яркости по столбцам (найти синие блоки выделения)
+# Brightness profile by columns (find blue selection blocks)
 blue_mask = (arr[:,:,2] > 100) & (arr[:,:,0] < 80) & (arr[:,:,1] < 100)
-blue_rows = blue_mask.any(axis=1)  # True где есть синий
+blue_rows = blue_mask.any(axis=1)  # True where blue exists
 
-# Профиль яркости текста по строкам
+# Text brightness profile by rows
 gray = np.mean(arr, axis=2)
-luminance = gray.mean(axis=1)  # средняя яркость каждой строки
+luminance = gray.mean(axis=1)  # mean brightness of each row
 
-# Найти ряды текста: тёмный фон (~30) + светлый текст (~212) = luminance ~40-60
+# Find text rows: dark background (~30) + light text (~212) = luminance ~40-60
 text_rows = (luminance > 35) & (luminance < 80)
 ```
 
-### Диагностические JS-сниппеты
+### Diagnostic JS snippets
 
 ```js
-// Проверить position у ключевых элементов
+// Check position of key elements
 (() => {
   const els = {
     screen: document.querySelector('.xterm-screen'),
@@ -75,7 +75,7 @@ text_rows = (luminance > 35) & (luminance < 80)
 ```
 
 ```js
-// Проверить смещение между слоями selection и rows
+// Check the offset between the selection and rows layers
 (() => {
   const sel = document.querySelector('.xterm-selection');
   const rows = document.querySelector('.xterm-rows');
@@ -91,69 +91,69 @@ text_rows = (luminance > 35) & (luminance < 80)
 })();
 ```
 
-## Паттерны диагностики
+## Diagnostic patterns
 
-### Призрак выделения (два синих блока вместо одного)
+### Selection ghost (two blue blocks instead of one)
 
-**Симптом:** на скриншоте два синих прямоугольника — один на своём месте, второй смещён.
-**Пиксельный признак:** две непересекающиеся группы синих пикселей с разными Y-координатами.
-**Причина:** `.xterm-screen` потерял `position: relative` → selection-слой позиционируется от body, а не от screen.
-**Проверка:** `getComputedStyle(screen).position` — должно быть `relative`.
-**Исправление:** `styles.css` → `.xterm-screen { position: relative !important; }`
+**Symptom:** on the screenshot there are two blue rectangles — one in place, the second offset.
+**Pixel signature:** two disjoint groups of blue pixels with different Y coordinates.
+**Cause:** `.xterm-screen` lost `position: relative` → the selection layer is positioned from body, not from screen.
+**Check:** `getComputedStyle(screen).position` — should be `relative`.
+**Fix:** `styles.css` → `.xterm-screen { position: relative !important; }`
 
-### Выделение не совпадает с текстом (сдвиг по Y)
+### Selection does not match text (Y offset)
 
-**Симптом:** синий блок выше или ниже текста, который он должен покрывать.
-**Пиксельный признак:** `diffY !== 0` между зоной синих пикселей и зоной текстовых пикселей.
-**Причина:** selection top и rows top расходятся (обычно из-за helpers, занявшего место в потоке).
-**Проверка:** сниппет «смещение между слоями» выше.
-**Исправление:** `.xterm-helpers { position: absolute; top: 0; } !important`
+**Symptom:** the blue block is above or below the text it should cover.
+**Pixel signature:** `diffY !== 0` between the blue pixel zone and the text pixel zone.
+**Cause:** selection top and rows top diverge (usually because helpers take up space in the flow).
+**Check:** the "offset between layers" snippet above.
+**Fix:** `.xterm-helpers { position: absolute; top: 0; } !important`
 
-### $$$$ в углу экрана
+### $$$$ in the corner of the screen
 
-**Симптом:** четыре знака доллара в левом верхнем углу терминала.
-**Пиксельный признак:** светлые пиксели в зоне (0,0)-(40,20) при отсутствии текста там.
-**Причина:** `.xterm-char-measure-element` потерял `visibility: hidden`.
-**Проверка:** `getComputedStyle(measure).visibility` — должно быть `hidden`.
-**Исправление:** `.xterm-char-measure-element { visibility: hidden !important; }`
+**Symptom:** four dollar signs in the top-left corner of the terminal.
+**Pixel signature:** light pixels in the (0,0)-(40,20) zone with no text there.
+**Cause:** `.xterm-char-measure-element` lost `visibility: hidden`.
+**Check:** `getComputedStyle(measure).visibility` — should be `hidden`.
+**Fix:** `.xterm-char-measure-element { visibility: hidden !important; }`
 
-### Сплошная заливка (текст не виден сквозь выделение)
+### Solid fill (text not visible through selection)
 
-**Симптом:** синий прямоугольник непрозрачный, текст под ним не читается.
-**Пиксельный признак:** внутри синей зоны нет светлых пикселей текста.
-**Причина:** `background-color` сплошной (напр. `#264f78`), а не полупрозрачный.
-**Проверка:** `getComputedStyle(selDiv).backgroundColor` — должен быть `rgba(38, 79, 120, 0.3)` или подобный.
-**Исправление:** переопределить background-color у `.xterm-selection div` на rgba с прозрачностью.
+**Symptom:** the blue rectangle is opaque, text underneath is unreadable.
+**Pixel signature:** no light text pixels inside the blue zone.
+**Cause:** `background-color` is solid (e.g. `#264f78`), not semi-transparent.
+**Check:** `getComputedStyle(selDiv).backgroundColor` — should be `rgba(38, 79, 120, 0.3)` or similar.
+**Fix:** override background-color of `.xterm-selection div` to rgba with transparency.
 
-## Цикл отладки
+## Debug loop
 
 ```
-1. Собрал:       npm run build
-2. Перезагрузил: python3 dev-kit/cdp/cdp-eval.py '...reload plugin...'
-3. Настроил:     python3 dev-kit/cdp/cdp-eval.py '...открыть терминал + выделить...'
-4. Скриншот:     python3 dev-kit/cdp/cdp-screenshot.py
-5. Прочитал:     Read screenshots/N.png
-6. Пиксели:      python3 -c "анализ PIL"
-7. DOM:          python3 dev-kit/cdp/cdp-eval.py '...диагностика...'
-8. Гипотеза:     сопоставить пиксели с DOM → найти причину
-9. Исправил:     правка в styles.css или TerminalView.ts
-10. Goto 1:      повторить для верификации
+1. Build:       npm run build
+2. Reload:      python3 dev-kit/cdp/cdp-eval.py '...reload plugin...'
+3. Setup:       python3 dev-kit/cdp/cdp-eval.py '...open terminal + select...'
+4. Screenshot:  python3 dev-kit/cdp/cdp-screenshot.py
+5. Read:        Read screenshots/N.png
+6. Pixels:      python3 -c "PIL analysis"
+7. DOM:         python3 dev-kit/cdp/cdp-eval.py '...diagnostics...'
+8. Hypothesis:  correlate pixels with DOM → find the cause
+9. Fix:         edit in styles.css or TerminalView.ts
+10. Goto 1:     repeat for verification
 ```
 
-## Отчёт о скриншоте
+## Screenshot report
 
-При анализе скриншота всегда отвечай в структуре:
+When analyzing a screenshot, always respond in this structure:
 
-1. **Что видно:** конкретное описание (где синие блоки, где текст, есть ли перекрытие)
-2. **Измерения:** пиксельные координаты, размеры, смещения
-3. **Гипотезы:** ранжированные по вероятности, со ссылками на KB
-4. **Рекомендация:** что делать, без автоматического применения
+1. **What is visible:** concrete description (where the blue blocks are, where the text is, whether there is overlap)
+2. **Measurements:** pixel coordinates, sizes, offsets
+3. **Hypotheses:** ranked by likelihood, with links to the KB
+4. **Recommendation:** what to do, without auto-applying
 
-## Связанные ресурсы
+## Related resources
 
-- [[cdp-remote-debugging]] — настройка CDP, raw WebSocket, Origin
-- [[obsidian-css-overrides-position]] — Obsidian сбрасывает position на static
-- `/terminal-debug` — общая CDP-отладка (eval, reload, open terminal)
-- `dev-kit/cdp/cdp-screenshot.py` — захват скриншота
-- `dev-kit/cdp/cdp-eval.py` — выполнение JS
-- `autodocs/archive/knowledge-base/selection-fix-log.md` — лог попыток исправления выделения
+- [[cdp-remote-debugging]] — CDP setup, raw WebSocket, Origin
+- [[obsidian-css-overrides-position]] — Obsidian resets position to static
+- `/terminal-debug` — general CDP debugging (eval, reload, open terminal)
+- `dev-kit/cdp/cdp-screenshot.py` — screenshot capture
+- `dev-kit/cdp/cdp-eval.py` — execute JS
+- `autodocs/archive/knowledge-base/selection-fix-log.md` — log of selection fix attempts

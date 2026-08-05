@@ -1,27 +1,27 @@
 # Shell Execution
 
-Проверка выполнения команд в терминале и отображения вывода.
+Verifies command execution in the terminal and output display.
 
-## Команда echo
+## echo command
 tags: mvp, doD-3, cdp
 
-* Открыть терминал
-* Дождаться приглашения командной строки в течение "8" секунд
-* Ввести команду "echo hello_mvp_test"
-* В течение "5" секунд вывод содержит "hello_mvp_test"
+* Open terminal
+* Wait for shell prompt within "8" seconds
+* Enter command "echo hello_mvp_test"
+* Within "5" seconds output contains "hello_mvp_test"
 
-## Команда pwd
+## pwd command
 tags: mvp, doD-3, cdp
 
-* Открыть терминал
-* Дождаться приглашения командной строки в течение "8" секунд
-* Ввести команду "pwd"
-* В течение "5" секунд вывод содержит "pwd_separator"
+* Open terminal
+* Wait for shell prompt within "8" seconds
+* Enter command "pwd"
+* Within "5" seconds output contains "pwd_separator"
 
-## Возврат приглашения после команды
+## Prompt returns after command
 tags: mvp, doD-3, cdp
 
-* Открыть терминал
-* Дождаться приглашения командной строки в течение "8" секунд
-* Ввести команду "echo done"
-* В течение "5" секунд терминал показывает новое приглашение командной строки
+* Open terminal
+* Wait for shell prompt within "8" seconds
+* Enter command "echo done"
+* Within "5" seconds the terminal shows a new shell prompt

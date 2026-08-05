@@ -7,7 +7,7 @@ from getgauge.python import step
 from conftest import cdp_eval
 
 
-@step("Плагин minimalist-terminal зарегистрирован в app.plugins.plugins")
+@step("Plugin minimalist-terminal is registered in app.plugins.plugins")
 def plugin_is_registered():
     result = cdp_eval("'minimalist-terminal' in app.plugins.plugins")
     assert result is True, (
@@ -16,7 +16,7 @@ def plugin_is_registered():
     )
 
 
-@step("Плагин minimalist-terminal включён (enabled)")
+@step("Plugin minimalist-terminal is enabled")
 def plugin_is_enabled():
     result = cdp_eval(
         "app.plugins.plugins['minimalist-terminal'] && "
@@ -25,7 +25,7 @@ def plugin_is_enabled():
     assert result is True, "Plugin is not enabled"
 
 
-@step("Плагин имеет команду <command_name>")
+@step("Plugin has command <command_name>")
 def plugin_has_command(command_name: str):
     cmd_id = _command_id_for(command_name)
     result = cdp_eval(
@@ -37,7 +37,7 @@ def plugin_has_command(command_name: str):
     assert result is True, f"Command '{cmd_id}' not registered"
 
 
-@step("Плагин имеет ribbon-icon <icon_name>")
+@step("Plugin has ribbon-icon <icon_name>")
 def plugin_has_ribbon_icon(icon_name: str):
     label = _ribbon_label_for(icon_name)
     result = cdp_eval(

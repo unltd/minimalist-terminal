@@ -1,20 +1,20 @@
 # Text Selection
 
-Проверка выделения текста мышью в терминале.
+Verifies mouse text selection in the terminal.
 
-## Программное выделение возвращает текст
+## Programmatic selection returns text
 tags: mvp, doD-4, cdp
 
-* Открыть терминал
-* Дождаться приглашения командной строки в течение "8" секунд
-* Ввести команду "echo selection_test_line"
-* Терминал содержит текст в буфере
-* Программное выделение через term.selectLines возвращает непустой текст
+* Open terminal
+* Wait for shell prompt within "8" seconds
+* Enter command "echo selection_test_line"
+* Terminal contains text in buffer
+* Programmatic selection via term.selectLines returns non-empty text
 
-## Элементы выделения не затронуты Obsidian CSS
+## Selection elements unaffected by Obsidian CSS
 tags: mvp, doD-4, cdp
 
-* Открыть терминал
-* Дождаться приглашения командной строки в течение "8" секунд
-* CSS-свойство position элемента ".xterm-screen" равно "relative"
-* DOM содержит селектор ".xterm-selection-layer"
+* Open terminal
+* Wait for shell prompt within "8" seconds
+* CSS position of element ".xterm-screen" equals "relative"
+* DOM contains selector ".xterm-selection-layer"

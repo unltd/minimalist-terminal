@@ -1,19 +1,19 @@
 # Autofocus
 
-Проверка авто-фокуса терминала при открытии.
+Verifies that the terminal auto-focuses on open.
 
-## Фокус после открытия
+## Focus after opening
 tags: mvp, doD-6, cdp
 
-* Закрыть все листья терминала
-* Открыть терминал
-* В течение "5" секунд терминал получает фокус
-* Активный элемент — textarea внутри xterm
+* Close all terminal leaves
+* Open terminal
+* Within "5" seconds the terminal gains focus
+* Active element is a textarea inside xterm
 
-## Клик в терминале даёт фокус
+## Clicking in the terminal gives focus
 tags: mvp, doD-6, cdp
 
-* Открыть терминал
-* Дождаться приглашения командной строки в течение "8" секунд
-* Кликнуть в контейнер терминала
-* Активный элемент — textarea внутри xterm
+* Open terminal
+* Wait for shell prompt within "8" seconds
+* Click the terminal container
+* Active element is a textarea inside xterm

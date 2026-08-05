@@ -1,20 +1,20 @@
 # Scroll
 
-Проверка скролла в терминале.
+Verifies scrolling in the terminal.
 
-## Скролл после заполнения буфера
+## Scroll after buffer fills up
 tags: mvp, doD-5, cdp
 
-* Открыть терминал
-* Дождаться приглашения командной строки в течение "8" секунд
-* Ввести команду для генерации "100" строк вывода
-* Вьюпорт терминала имеет ненулевой scrollTop
+* Open terminal
+* Wait for shell prompt within "8" seconds
+* Enter command to generate "100" lines of output
+* Terminal viewport has non-zero scrollTop
 
-## Скроллбэк сохраняет строки
+## Scrollback preserves lines
 tags: mvp, doD-5, cdp
 
-* Открыть терминал
-* Дождаться приглашения командной строки в течение "8" секунд
-* Ввести команду для генерации "50" строк вывода
-* Длина буфера терминала больше "0"
-* Длина буфера терминала не меньше "50"
+* Open terminal
+* Wait for shell prompt within "8" seconds
+* Enter command to generate "50" lines of output
+* Terminal buffer length is greater than "0"
+* Terminal buffer length is at least "50"

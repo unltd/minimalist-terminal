@@ -1,19 +1,19 @@
 # Open Terminal
 
-Проверка открытия терминала: по иконке (ribbon) и через Command Palette.
+Verifies opening the terminal: via the ribbon icon and via the Command Palette.
 
-## Открытие через Command Palette
+## Open via Command Palette
 tags: mvp, doD-2, cdp
 
-* Закрыть все листья терминала
-* Выполнить команду "minimalist-terminal:open-terminal"
-* В workspace есть лист с типом "minimalist-terminal-view"
-* DOM содержит элемент с классом "xterm"
+* Close all terminal leaves
+* Execute command "minimalist-terminal:open-terminal"
+* Workspace has a leaf of type "minimalist-terminal-view"
+* DOM contains element with class "xterm"
 
-## Повторное открытие не дублирует
+## Reopening does not duplicate
 tags: mvp, doD-2, cdp
 
-* Закрыть все листья терминала
-* Выполнить команду "minimalist-terminal:open-terminal"
-* Выполнить команду "minimalist-terminal:open-terminal"
-* В workspace ровно "1" лист с типом "minimalist-terminal-view"
+* Close all terminal leaves
+* Execute command "minimalist-terminal:open-terminal"
+* Execute command "minimalist-terminal:open-terminal"
+* Workspace has exactly "1" leaf of type "minimalist-terminal-view"

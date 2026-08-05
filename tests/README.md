@@ -1,16 +1,16 @@
 # Minimalist Terminal — Test Suite
 
-Gauge + pytest тесты для плагина Minimalist Terminal. Спецификации на Markdown (`.spec`), имплементации шагов на Python/pytest.
+Gauge + pytest tests for the Minimalist Terminal plugin. Specifications are in Markdown (`.spec`), step implementations in Python/pytest.
 
-## Структура
+## Structure
 
 ```
 tests/
 ├── manifest.json              — Gauge project
 ├── env/default/
 │   └── python.properties      — Python runner config
-├── specs/                     — Gauge .spec файлы (Markdown)
-│   └── mvp/                   — тесты для MVP Definition of Done
+├── specs/                     — Gauge .spec files (Markdown)
+│   └── mvp/                   — tests for the MVP Definition of Done
 │       ├── build-load.spec
 │       ├── open-terminal.spec
 │       ├── shell-exec.spec
@@ -19,12 +19,12 @@ tests/
 │       ├── autofocus.spec
 │       └── close-no-zombie.spec
 ├── step_impl/                 — pytest step implementations
-│   ├── conftest.py            — общие фикстуры и CDP-клиент
-│   └── test_*.py              — по одному файлу на .spec
-└── README.md                  — этот файл
+│   ├── conftest.py            — shared fixtures and CDP client
+│   └── test_*.py              — one file per .spec
+└── README.md                  — this file
 ```
 
-## Зависимости
+## Dependencies
 
 ```bash
 # Gauge CLI
@@ -37,84 +37,84 @@ gauge install python
 pip install getgauge pytest
 ```
 
-## Запуск Obsidian с CDP
+## Running Obsidian with CDP
 
-Тесты требуют запущенный Obsidian с удалённой отладкой:
+Tests require a running Obsidian instance with remote debugging:
 
 ```bash
 open -a Obsidian --args --remote-debugging-port=9222 --remote-allow-origins=*
 ```
 
-**Важно:** Obsidian должен быть запущен **до** тестов. Gauge-фикстуры подключаются к уже запущенному экземпляру.
+**Important:** Obsidian must be started **before** the tests. Gauge fixtures connect to an already-running instance.
 
-### Из Docker-контейнера (claudocker)
+### From a Docker container (claudocker)
 
-CDP-скрипты по умолчанию подключаются к хосту через `192.168.65.254:9222`. Если Obsidian запущен на macOS хосте — всё должно работать автоматически.
+CDP scripts connect to the host via `192.168.65.254:9222` by default. If Obsidian is running on the macOS host, everything should work automatically.
 
-### С macOS хоста
+### From the macOS host
 
-Установите переменную окружения, чтобы скрипты использовали localhost:
+Set the environment variable so the scripts use localhost:
 
 ```bash
 export CDP_HOST=127.0.0.1
 ```
 
-## Запуск тестов
+## Running tests
 
-### Все MVP-тесты через Gauge
+### All MVP tests via Gauge
 
 ```bash
 gauge run tests/specs/mvp/
 ```
 
-### Конкретная спецификация
+### A specific specification
 
 ```bash
 gauge run tests/specs/mvp/shell-exec.spec
 ```
 
-### По тегам
+### By tags
 
 ```bash
 gauge run --tags "doD-3" tests/specs/
 gauge run --tags "cdp" tests/specs/
 ```
 
-### Dry-run (валидация структуры, без выполнения)
+### Dry-run (structure validation, no execution)
 
 ```bash
 gauge run --dry-run tests/specs/
 ```
 
-### Через pytest напрямую (без Gauge)
+### Directly via pytest (without Gauge)
 
 ```bash
 pytest tests/step_impl/ -v
 ```
 
-## Теги
+## Tags
 
-Каждый `.spec`-файл размечен тегами:
+Each `.spec` file is tagged:
 
-| Тег | Значение |
+| Tag | Meaning |
 |-----|----------|
-| `mvp` | Тест для MVP |
-| `doD-1` … `doD-7` | Какой пункт DoD проверяется |
-| `cdp` | Автоматизирован через CDP |
-| `visual` | Требует визуальной проверки (скриншот) |
+| `mvp` | MVP test |
+| `doD-1` … `doD-7` | Which DoD item is verified |
+| `cdp` | Automated via CDP |
+| `visual` | Requires visual verification (screenshot) |
 
-## Как добавить новый тест
+## How to add a new test
 
-1. Создать `.spec`-файл в `tests/specs/<feature>/`
-2. Описать сценарии в Gauge Markdown
-3. Создать `test_*.py` в `tests/step_impl/` с `@step`-декораторами
-4. Прогнать: `gauge run tests/specs/<feature>/`
+1. Create a `.spec` file in `tests/specs/<feature>/`
+2. Describe scenarios in Gauge Markdown
+3. Create `test_*.py` in `tests/step_impl/` with `@step` decorators
+4. Run: `gauge run tests/specs/<feature>/`
 
-Существующие шаги (из `conftest.py` и других `test_*.py`) переиспользуются автоматически — Gauge находит `@step` по тексту.
+Existing steps (from `conftest.py` and other `test_*.py`) are reused automatically — Gauge finds the `@step` by text.
 
-## Ограничения
+## Limitations
 
-- **Только локально.** Тесты требуют реальный Obsidian с GUI — CI невозможен без эмуляции дисплея
-- **Один экземпляр Obsidian.** CDP-скрипты подключаются к первому окну `app://obsidian.md`
-- **MacOS.** Команда `open -a Obsidian` — macOS-специфична
-- **Нестабильность.** Obsidian может менять внутренние ID команд и структуру DOM — тесты нужно обновлять при мажорных версиях
+- **Local only.** Tests require a real Obsidian with a GUI — CI is impossible without display emulation
+- **Single Obsidian instance.** CDP scripts connect to the first `app://obsidian.md` window
+- **macOS.** The `open -a Obsidian` command is macOS-specific
+- **Instability.** Obsidian may change internal command IDs and the DOM structure — tests need updates on major releases

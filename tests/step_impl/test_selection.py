@@ -10,7 +10,7 @@ from getgauge.python import step
 from conftest import cdp_eval
 
 
-@step("Терминал содержит текст в буфере")
+@step("Terminal contains text in buffer")
 def terminal_has_buffer_text():
     time.sleep(0.5)
     length = cdp_eval("""
@@ -23,7 +23,7 @@ def terminal_has_buffer_text():
     assert length > 0, "Terminal buffer is empty"
 
 
-@step("Программное выделение через term.selectLines возвращает непустой текст")
+@step("Programmatic selection via term.selectLines returns non-empty text")
 def select_lines_returns_text():
     cdp_eval("""
         (function () {
@@ -50,7 +50,7 @@ def select_lines_returns_text():
     assert len(str(selection)) > 0, "Selection text is empty"
 
 
-@step("CSS-свойство position элемента <selector> равно <expected>")
+@step("CSS position of element <selector> equals <expected>")
 def element_position_equals(selector: str, expected: str):
     actual = cdp_eval(f"""
         (function () {{
@@ -65,7 +65,7 @@ def element_position_equals(selector: str, expected: str):
     )
 
 
-@step("DOM содержит селектор <selector>")
+@step("DOM contains selector <selector>")
 def dom_contains_selector(selector: str):
     exists = cdp_eval(
         f"(function () {{ return document.querySelectorAll({selector!r}).length > 0; }})()"

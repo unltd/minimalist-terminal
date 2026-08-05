@@ -11,7 +11,7 @@ from getgauge.python import step
 from conftest import cdp_eval
 
 
-@step("Отправить в терминал команду <command> с переводом строки")
+@step("Send command <command> to terminal with newline")
 def send_command_with_newline(command: str):
     cdp_eval(f"""
         (function () {{
@@ -22,7 +22,7 @@ def send_command_with_newline(command: str):
     """)
 
 
-@step("В течение <seconds> секунд лист терминала удалён из workspace")
+@step("Within <seconds> seconds the terminal leaf is removed from workspace")
 def terminal_leaf_removed(seconds: str):
     timeout_ms = int(seconds) * 1000
     deadline = time.monotonic() + timeout_ms / 1000
@@ -40,7 +40,7 @@ def terminal_leaf_removed(seconds: str):
     )
 
 
-@step("Нет процессов node-pty в системе")
+@step("No node-pty processes in the system")
 def no_node_pty_processes():
     time.sleep(1.0)
 
@@ -74,7 +74,7 @@ def no_node_pty_processes():
         pass
 
 
-@step("Закрыть все листья терминала через workspace API")
+@step("Close all terminal leaves via workspace API")
 def close_all_terminal_leaves_via_api():
     cdp_eval(
         "app.workspace.detachLeavesOfType('minimalist-terminal-view');"

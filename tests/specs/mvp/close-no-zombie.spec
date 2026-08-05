@@ -1,21 +1,21 @@
 # Close on Ctrl+D — No Zombies
 
-Проверка, что закрытие терминала по Ctrl+D (exit) не оставляет зомби-процессов.
+Verifies that closing the terminal with Ctrl+D (exit) leaves no zombie processes.
 
-## Закрытие по Ctrl+D
+## Close via Ctrl+D
 tags: mvp, doD-7, cdp
 
-* Открыть терминал
-* Дождаться приглашения командной строки в течение "8" секунд
-* Отправить в терминал команду "exit" с переводом строки
-* В течение "8" секунд лист терминала удалён из workspace
-* Нет процессов node-pty в системе
+* Open terminal
+* Wait for shell prompt within "8" seconds
+* Send command "exit" to terminal with newline
+* Within "8" seconds the terminal leaf is removed from workspace
+* No node-pty processes in the system
 
-## Закрытие листа через Obsidian API
+## Close leaf via Obsidian API
 tags: mvp, doD-7, cdp
 
-* Открыть терминал
-* Дождаться приглашения командной строки в течение "8" секунд
-* Закрыть все листья терминала через workspace API
-* В течение "5" секунд лист терминала удалён из workspace
-* Нет процессов node-pty в системе
+* Open terminal
+* Wait for shell prompt within "8" seconds
+* Close all terminal leaves via workspace API
+* Within "5" seconds the terminal leaf is removed from workspace
+* No node-pty processes in the system

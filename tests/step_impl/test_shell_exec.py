@@ -10,7 +10,7 @@ from getgauge.python import step
 from conftest import cdp_eval
 
 
-@step("Открыть терминал")
+@step("Open terminal")
 def open_terminal():
     cdp_eval("""
         (function () {
@@ -26,7 +26,7 @@ def open_terminal():
     time.sleep(2.0)
 
 
-@step("Дождаться приглашения командной строки в течение <seconds> секунд")
+@step("Wait for shell prompt within <seconds> seconds")
 def wait_for_prompt(seconds: str):
     timeout_ms = int(seconds) * 1000
     deadline = time.monotonic() + timeout_ms / 1000
@@ -56,7 +56,7 @@ def wait_for_prompt(seconds: str):
     raise AssertionError(f"Prompt not found within {seconds}s")
 
 
-@step("Ввести команду <command>")
+@step("Enter command <command>")
 def type_command(command: str):
     cdp_eval(f"""
         (function () {{
@@ -67,7 +67,7 @@ def type_command(command: str):
     """)
 
 
-@step("В течение <seconds> секунд вывод содержит <expected>")
+@step("Within <seconds> seconds output contains <expected>")
 def output_contains_within(seconds: str, expected: str):
     timeout_ms = int(seconds) * 1000
     deadline = time.monotonic() + timeout_ms / 1000
@@ -96,7 +96,7 @@ def output_contains_within(seconds: str, expected: str):
     raise AssertionError(f"'{search}' not found in terminal output within {seconds}s")
 
 
-@step("В течение <seconds> секунд терминал показывает новое приглашение командной строки")
+@step("Within <seconds> seconds the terminal shows a new shell prompt")
 def prompt_returns(seconds: str):
     timeout_ms = int(seconds) * 1000
     deadline = time.monotonic() + timeout_ms / 1000

@@ -1,6 +1,6 @@
 ---
 name: mounts
-description: Показать смонтированные директории, настроенные для claudocker
+description: Show mounted directories configured for claudocker
 user-invocable: true
 allowed-tools:
   - Read
@@ -9,39 +9,39 @@ allowed-tools:
   - Bash(echo *)
 ---
 
-# /mounts — Монтируемые директории
+# /mounts — Mounted directories
 
-Показать список смонтированных директорий, настроенных в `.claudocker/settings.json`.
+Show the list of mounted directories configured in `.claudocker/settings.json`.
 
 ## Steps
 
-1. Прочитай `.claudocker/settings.json` (если есть) и покажи содержимое ключа `mounts`.
+1. Read `.claudocker/settings.json` (if present) and show the contents of the `mounts` key.
 
-2. Если файла нет — сообщи, что проект не настроен для claudocker, и предложи запустить `claudocker` для инициализации.
+2. If the file is missing — report that the project is not configured for claudocker, and suggest running `claudocker` to initialize.
 
-3. Для каждой дополнительной директории в `mounts` проверь, существует ли она на диске, и отметь статус.
+3. For each additional directory in `mounts`, check whether it exists on disk and mark its status.
 
-4. Также покажи стандартные монтирования, которые claudocker добавляет автоматически:
-   - `$PWD` → `$PWD` (текущий проект)
-   - `~/.claude` → `/home/dev/.claude` (история Claude)
-   - `~/.claude.json` → `/home/dev/.claude.json` (конфиг аутентификации)
+4. Also show the standard mounts that claudocker adds automatically:
+   - `$PWD` → `$PWD` (current project)
+   - `~/.claude` → `/home/dev/.claude` (Claude history)
+   - `~/.claude.json` → `/home/dev/.claude.json` (auth config)
 
-5. Если Docker настроен (режим `dind`, `dood` или `auto`), тоже покажи соответствующие монтирования.
+5. If Docker is configured (mode `dind`, `dood` or `auto`), also show the corresponding mounts.
 
-6. Если `mounts` пуст — предложи добавить директории через `claudocker --add-mount <путь>` или отредактировав `.claudocker/settings.json`.
+6. If `mounts` is empty — suggest adding directories via `claudocker --add-mount <path>` or by editing `.claudocker/settings.json`.
 
-## Пример вывода
+## Example output
 
 ```
-📁 Дополнительные монтируемые директории (2):
-  1. /home/user/other-project  (✓ существует)
-  2. /mnt/shared-libs           (⚠️  не найдена)
+📁 Additional mounted directories (2):
+  1. /home/user/other-project  (✓ exists)
+  2. /mnt/shared-libs           (⚠️  not found)
 
-📌 Стандартные монтирования:
-  • проект          → /home/user/my-project
+📌 Standard mounts:
+  • project         → /home/user/my-project
   • claude config   → ~/.claude → /home/dev/.claude
   • claude auth     → ~/.claude.json → /home/dev/.claude.json
-  • docker (DinD)   → свой демон (privileged)
+  • docker (DinD)   → its own daemon (privileged)
 
-💡 Для добавления директории: claudocker --add-mount /путь/к/папке
+💡 To add a directory: claudocker --add-mount /path/to/folder
 ```
