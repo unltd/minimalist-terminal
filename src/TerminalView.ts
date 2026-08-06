@@ -80,13 +80,17 @@ export class TerminalView extends ItemView {
     this.pty = new PtyBridge(
       {
         onData: (data: string) => this.term!.write(data),
-        onExit: () => {
-          // Don't detach — keep the terminal visible with the error/output.
-          // PtyBridge writes an error message via onData before calling onExit
-          // when initialization fails (e.g. missing node-pty on Windows).
-          if (this.term) {
-            this.term.write("\r\n[shell exited]\r\n");
+        onExit: (exitCode) => {
+          // Init failure (exitCode < 0, e.g. missing node-pty) — keep the
+          // terminal visible so the error message written via onData stays
+          // readable. Normal shell exit (exitCode >= 0) closes the pane.
+          if (exitCode < 0) {
+            if (this.term) {
+              this.term.write("\r\n[shell exited]\r\n");
+            }
+            return;
           }
+          this.leaf.detach();
         },
       },
       this.term.cols,
