@@ -15,13 +15,13 @@ npm run dev      # Watch mode (~30 ms rebuilds)
 npm run build    # Type-check + production bundle
 ```
 
-For CDP-based browser testing (Gauge + pytest), see [CLAUDE.md](CLAUDE.md).
+For CDP-based browser testing (pytest + CDP), see [CLAUDE.md](CLAUDE.md).
 
 ## Before submitting a PR
 
 1. Run `npm run build` — verify no type errors
 2. Test the plugin manually in a vault (install via symlink or clone into `.obsidian/plugins/`)
-3. If adding a feature, consider adding a test spec in `tests/specs/`
+3. If adding a feature, consider adding a test to `tests/test_mvp_dod.py`
 
 ## Commit conventions
 

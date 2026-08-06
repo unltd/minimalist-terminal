@@ -1,40 +1,20 @@
 # Minimalist Terminal — Test Suite
 
-Gauge + pytest tests for the Minimalist Terminal plugin. Specifications are in Markdown (`.spec`), step implementations in Python/pytest.
+pytest + CDP tests for the Minimalist Terminal plugin. All checks run against a live Obsidian instance over Chrome DevTools Protocol.
 
 ## Structure
 
 ```
 tests/
-├── manifest.json              — Gauge project
-├── env/default/
-│   └── python.properties      — Python runner config
-├── specs/                     — Gauge .spec files (Markdown)
-│   └── mvp/                   — tests for the MVP Definition of Done
-│       ├── build-load.spec
-│       ├── open-terminal.spec
-│       ├── shell-exec.spec
-│       ├── selection.spec
-│       ├── scroll.spec
-│       ├── autofocus.spec
-│       └── close-no-zombie.spec
-├── step_impl/                 — pytest step implementations
-│   ├── conftest.py            — shared fixtures and CDP client
-│   └── test_*.py              — one file per .spec
-└── README.md                  — this file
+├── conftest.py        — shared CDP client (cdp_eval, cdp_screenshot, wait_for) + skip fixture
+├── test_mvp_dod.py    — the 7 MVP Definition-of-Done checks
+└── README.md          — this file
 ```
 
 ## Dependencies
 
 ```bash
-# Gauge CLI
-brew install gauge
-
-# Gauge Python plugin
-gauge install python
-
-# Python dependencies
-pip install getgauge pytest
+pip install pytest
 ```
 
 ## Running Obsidian with CDP
@@ -45,7 +25,7 @@ Tests require a running Obsidian instance with remote debugging:
 open -a Obsidian --args --remote-debugging-port=9222 --remote-allow-origins=*
 ```
 
-**Important:** Obsidian must be started **before** the tests. Gauge fixtures connect to an already-running instance.
+**Important:** Obsidian must be started **before** the tests and opened on the target vault (the vault is matched by name via the `CDP_VAULT` env var, default `obsidian-test`). The plugin under test must be installed in `.obsidian/plugins/minimalist-terminal/` and enabled.
 
 ### From a Docker container (claudocker)
 
@@ -61,60 +41,21 @@ export CDP_HOST=127.0.0.1
 
 ## Running tests
 
-### All MVP tests via Gauge
-
 ```bash
-gauge run tests/specs/mvp/
+pytest tests/test_mvp_dod.py -v
 ```
 
-### A specific specification
-
-```bash
-gauge run tests/specs/mvp/shell-exec.spec
-```
-
-### By tags
-
-```bash
-gauge run --tags "doD-3" tests/specs/
-gauge run --tags "cdp" tests/specs/
-```
-
-### Dry-run (structure validation, no execution)
-
-```bash
-gauge run --dry-run tests/specs/
-```
-
-### Directly via pytest (without Gauge)
-
-```bash
-pytest tests/step_impl/ -v
-```
-
-## Tags
-
-Each `.spec` file is tagged:
-
-| Tag | Meaning |
-|-----|----------|
-| `mvp` | MVP test |
-| `doD-1` … `doD-7` | Which DoD item is verified |
-| `cdp` | Automated via CDP |
-| `visual` | Requires visual verification (screenshot) |
+If Obsidian is not reachable via CDP, all tests are auto-skipped (see the `_skip_if_no_obsidian` fixture).
 
 ## How to add a new test
 
-1. Create a `.spec` file in `tests/specs/<feature>/`
-2. Describe scenarios in Gauge Markdown
-3. Create `test_*.py` in `tests/step_impl/` with `@step` decorators
-4. Run: `gauge run tests/specs/<feature>/`
-
-Existing steps (from `conftest.py` and other `test_*.py`) are reused automatically — Gauge finds the `@step` by text.
+1. Add a `test_dod<N>_<name>()` function to `tests/test_mvp_dod.py`
+2. Use the `cdp_eval()` helper to execute JS in Obsidian (open a terminal, inspect the DOM, run a shell command)
+3. Reuse helpers: `_ensure_terminal_open()`, `_wait_for_prompt()`, `_pty_write()`
 
 ## Limitations
 
 - **Local only.** Tests require a real Obsidian with a GUI — CI is impossible without display emulation
-- **Single Obsidian instance.** CDP scripts connect to the first `app://obsidian.md` window
-- **macOS.** The `open -a Obsidian` command is macOS-specific
+- **CDP latency.** Each `cdp_eval()` round-trip takes ~5 s from the container to the macOS host — timeouts are calibrated to this
+- **Host-dependent shell.** Tests detect the shell prompt by `%`, `$`, `#`, `>` characters (zsh default on macOS)
 - **Instability.** Obsidian may change internal command IDs and the DOM structure — tests need updates on major releases

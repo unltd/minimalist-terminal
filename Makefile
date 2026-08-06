@@ -7,8 +7,7 @@ build:
 	npm run build
 
 test:
-	gauge run tests/specs/ || true
-	pytest tests/ -v
+	pytest tests/test_mvp_dod.py -v
 
 lint:
 	npx tsc -noEmit -skipLibCheck

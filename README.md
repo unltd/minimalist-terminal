@@ -122,11 +122,11 @@ See [`CLAUDE.md`](CLAUDE.md) for detailed development notes, CDP testing workflo
 
 ### Testing
 
-Tests use Gauge BDD framework + pytest for CDP-based browser automation:
+Tests use pytest + CDP for browser automation against a running Obsidian instance (must be launched with `--remote-debugging-port`):
 
 ```bash
-# Run all specs
-gauge run tests/specs/
+# Run the DoD test suite (requires Obsidian running with CDP, on the test vault)
+pytest tests/test_mvp_dod.py -v
 
 # CDP debug mode — connect to a running Obsidian for step-by-step debugging
 ./dev-kit/debug/debug.sh    # macOS

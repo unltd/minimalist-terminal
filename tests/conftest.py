@@ -6,7 +6,7 @@ Provides:
 - cdp_screenshot() — capture a screenshot of the Obsidian window
 - wait_for(cond)  — poll until a JS condition is true
 
-CDP connection uses the existing scripts/cdp-eval.py and cdp-screenshot.py.
+CDP connection uses the existing dev-kit/cdp/cdp-eval.py and cdp-screenshot.py.
 When running from a Docker container (claudocker), CDP_HOST defaults to the
 Docker host IP (192.168.65.254). On macOS host, set CDP_HOST=127.0.0.1.
 """
@@ -20,9 +20,9 @@ from pathlib import Path
 
 import pytest
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-CDP_EVAL = str(PROJECT_ROOT / "scripts" / "cdp-eval.py")
-CDP_SCREENSHOT = str(PROJECT_ROOT / "scripts" / "cdp-screenshot.py")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+CDP_EVAL = str(PROJECT_ROOT / "dev-kit" / "cdp" / "cdp-eval.py")
+CDP_SCREENSHOT = str(PROJECT_ROOT / "dev-kit" / "cdp" / "cdp-screenshot.py")
 
 
 class CdpError(RuntimeError):
@@ -136,7 +136,7 @@ def wait_for(condition_js: str, timeout_ms: int = 5000, poll_ms: int = 100) -> b
 
 
 # ---------------------------------------------------------------------------
-# pytest fixtures (used when running pytest directly, without Gauge)
+# pytest fixtures
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(scope="session")
@@ -156,33 +156,3 @@ def _skip_if_no_obsidian(obsidian_available: bool):
         pytest.skip("Obsidian CDP not reachable — is it running with --remote-debugging-port=9222?")
 
 
-@pytest.fixture
-def term_view():
-    """Return a JS expression that resolves to the active TerminalView."""
-    cdp_eval("""
-        (function () {
-            var leaf = app.workspace.getLeavesOfType("minimalist-terminal-view")[0];
-            if (!leaf) {
-                leaf = app.workspace.getLeaf("split", "horizontal");
-            }
-            leaf.setViewState({ type: "minimalist-terminal-view", active: true });
-        })()
-    """)
-    # Give the terminal time to open and initialize
-    time.sleep(1.5)
-    return True
-
-
-@pytest.fixture
-def assert_no_zombies():
-    """Check that no orphaned node-pty processes exist."""
-    yield
-    # After test: check for zombies
-    proc = subprocess.run(
-        ["pgrep", "-f", "node-pty"],
-        capture_output=True,
-        text=True,
-    )
-    zombies = [p for p in proc.stdout.strip().splitlines() if p.strip()]
-    if zombies:
-        pytest.fail(f"Zombie PTY processes found: {zombies}")

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- Terminal closes when the shell exits (close-on-exit restored); an init failure (e.g. missing node-pty) still keeps the terminal open with the error message
+
+### Removed
+- Gauge BDD test layer — tests now run via pytest only (`tests/test_mvp_dod.py`)
+
 ## [0.3.0] — 2026-08-04
 
 ### Added
