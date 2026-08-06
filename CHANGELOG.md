@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Terminal closes when the shell exits (close-on-exit restored); an init failure (e.g. missing node-pty) still keeps the terminal open with the error message
 
+### Docs
+- README: "Security & access" disclosure (full system access, network, node-pty) and "Why Minimalist Terminal?" positioning
+
 ### Removed
 - Gauge BDD test layer — tests now run via pytest only (`tests/test_mvp_dod.py`)
 

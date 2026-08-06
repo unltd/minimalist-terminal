@@ -8,6 +8,14 @@ Embed a real terminal in [Obsidian](https://obsidian.md) to run CLI tools and AI
 
 ![Minimalist Terminal screenshot](assets/terminal-screenshot.png)
 
+## Why Minimalist Terminal?
+
+A few terminal plugins already exist for Obsidian. Minimalist Terminal deliberately takes a smaller slice of the feature space:
+
+- **IntelliJ-style bottom pane** — opens as a workspace bottom pane and stays out of your way
+- **Small surface** — multi-tab terminals, clipboard, shell selection. No bundled themes, search bars, session managers, or notification sounds
+- **Runs your real shell** — zsh, bash, fish, or any custom path — so CLI tools and AI coding agents work exactly as they do in a normal terminal
+
 ## Features
 
 - **Configurable shell** — zsh (default), bash, fish, or custom path via Settings Tab
@@ -65,6 +73,14 @@ Or use the included install script:
 | Mobile (iOS/Android) | ❌ Unsupported | Requires Node.js native addon |
 
 The plugin is **desktop only** (`isDesktopOnly: true`). It uses [node-pty](https://github.com/lydell/node-pty) for pseudo-terminal support, which requires a native Node.js addon matching Obsidian's Electron ABI.
+
+## Security & access
+
+This plugin runs a real interactive shell (zsh, bash, fish, …) inside Obsidian. Because it is a genuine terminal:
+
+- **Full system access.** Commands you run can read and write files anywhere on your computer, including outside the vault. This is inherent to a terminal — it is what lets you run CLI tools and AI agents. Only run commands you trust.
+- **Network access.** Processes started in the terminal can reach the network. The plugin itself makes no network requests — all traffic is initiated by the shell commands you type.
+- **Native addon requirement.** The terminal is backed by node-pty, a native Node.js addon that must match Obsidian's Electron ABI. If a matching binary is not installed, the terminal shows a setup hint instead of a shell.
 
 ## Limitations
 
